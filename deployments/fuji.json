@@ -1,0 +1,15 @@
+{
+  "_comment": "Populated by deploy scripts on Day 4. Do not edit by hand.",
+  "_network": "Fuji C-Chain (chainId 43113)",
+  "_deployedAt": null,
+  "MarketClock": null,
+  "MarketSchedule": null,
+  "MockPriceFeed": null,
+  "FlatRiskPolicy": null,
+  "MarketHoursRiskPolicy": null,
+  "LiquidityVaultStandard": null,
+  "LiquidityVaultGuarded": null,
+  "PerpMarketStandard": null,
+  "PerpMarketGuarded": null,
+  "DemoUSDC": null
+}

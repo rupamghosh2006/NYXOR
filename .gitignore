@@ -1,0 +1,11 @@
+.env
+.env.local
+node_modules/
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+results/
+*.key
+*.pem
+.DS_Store
+foundryup-install.sh
