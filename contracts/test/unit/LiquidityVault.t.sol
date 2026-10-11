@@ -126,6 +126,49 @@ contract LiquidityVaultTest is Test {
         assertEq(usdc.balanceOf(market), SEED_AMOUNT + 30_000 * 1e6);
     }
 
+    /// @notice Confirms exact payout and recorded bad debt when trader profit exceeds available vault assets
+    function test_settleTraderPnl_profitExceedsVaultAssets() public {
+        vm.prank(lp1);
+        vault.deposit(100_000 * 1e6); // Vault holds only 100k USDC
+
+        uint256 marketBalanceBefore = usdc.balanceOf(market);
+
+        // Trader won 150k USDC (50k more than vault assets)
+        int256 excessiveProfit = 150_000 * 1e6;
+        vm.prank(market);
+        vault.settleTraderPnl(excessiveProfit);
+
+        // Payout to market is capped at 100k (all available vaultAssets)
+        assertEq(usdc.balanceOf(market) - marketBalanceBefore, 100_000 * 1e6);
+        // vaultAssets is depleted to 0
+        assertEq(vault.vaultAssets(), 0);
+        // Deficit of 50k is recorded in badDebtTotal
+        assertEq(vault.badDebtTotal(), 50_000 * 1e6);
+    }
+
+    /// @notice Confirms recapitalization edge case where vaultAssets == 0 but totalShares > 0
+    function test_deposit_recapitalizationWhenVaultAssetsZeroAndTotalSharesPositive() public {
+        vm.prank(lp1);
+        vault.deposit(100_000 * 1e6);
+
+        // Insolvency event wipes all 100k vault assets
+        vm.prank(market);
+        vault.settleTraderPnl(100_000 * 1e6);
+
+        assertEq(vault.vaultAssets(), 0);
+        assertEq(vault.totalShares(), 100_000 * 1e6); // Existing shares are worthless
+
+        // LP2 deposits 200k fresh capital to recapitalize
+        vm.prank(lp2);
+        uint256 freshShares = vault.deposit(200_000 * 1e6);
+
+        // Reset: totalShares becomes 200k (1:1 with fresh capital), avoiding dilution
+        assertEq(freshShares, 200_000 * 1e6);
+        assertEq(vault.totalShares(), 200_000 * 1e6);
+        assertEq(vault.vaultAssets(), 200_000 * 1e6);
+        assertEq(vault.sharesOf(lp2), 200_000 * 1e6);
+    }
+
     function test_coverShortfall_fullyCoveredByInsurance() public {
         vm.prank(lp1);
         vault.deposit(SEED_AMOUNT);

@@ -27,4 +27,7 @@ interface IMarketSchedule {
 
     /// @notice Returns the reopenCooldown duration in seconds
     function reopenCooldown() external view returns (uint32);
+
+    /// @notice Returns the timestamp of the most recent session close on or before ts
+    function getPreviousCloseTs(uint256 ts) external view returns (uint256);
 }

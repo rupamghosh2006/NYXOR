@@ -1,14 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Test, console2} from "forge-std/Test.sol";
-import {DemoUSDC} from "../../src/core/DemoUSDC.sol";
-import {MarketClock} from "../../src/core/MarketClock.sol";
-import {MarketSchedule} from "../../src/core/MarketSchedule.sol";
-import {MockPriceFeed} from "../../src/oracle/MockPriceFeed.sol";
-import {FlatRiskPolicy} from "../../src/policy/FlatRiskPolicy.sol";
-import {MarketHoursRiskPolicy} from "../../src/policy/MarketHoursRiskPolicy.sol";
-import {LiquidityVault} from "../../src/vault/LiquidityVault.sol";
+import {Test} from "forge-std/Test.sol";
 
 /// @title WeekendGapScenarioTest
 /// @notice Deterministic reproduction of the weekend-gap scenario from AGENTS.md §13.
@@ -24,9 +17,8 @@ import {LiquidityVault} from "../../src/vault/LiquidityVault.sol";
 ///            - Standard market accumulates BAD DEBT (losses exceed collateral).
 ///            - Guarded market has ZERO BAD DEBT (collateral fully buffers the 8% jump).
 contract WeekendGapScenarioTest is Test {
-    // Scaffold test contract for Day 3 implementation.
-    // Full execution against PerpMarket will be wired on Day 3.
-    function test_scenario_skeleton_ready() public pure {
-        assertTrue(true, "Weekend gap scenario skeleton ready for Day 3 PerpMarket implementation");
+    /// @dev Skipped until PerpMarket contract is implemented in Phase 3.
+    function test_scenario_weekend_gap() public {
+        vm.skip(true);
     }
 }

@@ -34,6 +34,7 @@ contract MockPriceFeed is IPriceFeed, AccessControl {
     error PriceZero();
     error NotClosedPhase();
     error InvalidPriceMove();
+    error AlreadyCheckpointedForSession();
 
     constructor(
         address admin,
@@ -52,7 +53,7 @@ contract MockPriceFeed is IPriceFeed, AccessControl {
         price1e8 = initialPrice1e8;
         updatedAt = IMarketClock(clock_).effectiveNow();
         lastOfficialClosePrice = initialPrice1e8;
-        lastCloseTimestamp = updatedAt;
+        lastCloseTimestamp = 0; // Uncheckpointed initially
 
         emit PriceUpdated(initialPrice1e8, updatedAt);
     }
@@ -101,13 +102,16 @@ contract MockPriceFeed is IPriceFeed, AccessControl {
         }
     }
 
-    /// @notice Permissionless checkpoint of close price once the market enters CLOSED phase
+    /// @notice Permissionless checkpoint of close price once the market enters CLOSED phase.
+    ///         Callable once per closed session. Sets timestamp to scheduled session close time.
     function checkpointClose() external {
         (Phase phase,,) = schedule.phaseAt(clock.effectiveNow());
         if (phase != Phase.CLOSED) revert NotClosedPhase();
 
-        lastCloseTimestamp = clock.effectiveNow();
-        // Emits confirmation of the frozen official close price
+        uint256 sessionCloseTs = schedule.getPreviousCloseTs(clock.effectiveNow());
+        if (sessionCloseTs == lastCloseTimestamp) revert AlreadyCheckpointedForSession();
+
+        lastCloseTimestamp = sessionCloseTs;
         emit CloseCheckpointed(lastOfficialClosePrice, lastCloseTimestamp);
     }
 

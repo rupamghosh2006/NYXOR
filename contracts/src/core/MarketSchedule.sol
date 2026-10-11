@@ -142,6 +142,30 @@ contract MarketSchedule is IMarketSchedule, AccessControl {
         return (Phase.OPEN, toClose, sinceOpen);
     }
 
+    /// @inheritdoc IMarketSchedule
+    function getPreviousCloseTs(uint256 ts) external view override returns (uint256) {
+        uint256 daysSinceEpoch = ts / 86_400;
+        uint32 secInDay = uint32(ts % 86_400);
+
+        for (uint256 lookback = 0; lookback < 7; lookback++) {
+            uint256 currentDay = daysSinceEpoch - lookback;
+            uint8 wday = uint8((currentDay + 3) % 7);
+            uint32 packedDate = _dayToPackedDate(currentDay);
+
+            if (!holidays[packedDate] && sessions[wday].tradingDay) {
+                // If checking today (lookback == 0), session close must have occurred on or before ts
+                if (lookback == 0) {
+                    if (secInDay >= sessions[wday].closeSecondsUTC) {
+                        return currentDay * 86_400 + sessions[wday].closeSecondsUTC;
+                    }
+                } else {
+                    return currentDay * 86_400 + sessions[wday].closeSecondsUTC;
+                }
+            }
+        }
+        return 0;
+    }
+
     // ─── Admin functions ──────────────────────────────────────────────────────
 
     function setSession(

@@ -92,26 +92,29 @@ contract MarketHoursRiskPolicy is IRiskPolicy {
         // progress: 0 at start of PRE_CLOSE -> 10000 at exact close
         uint256 progressBps = (elapsed * 10000) / window;
 
-        // Leverage: 2000 -> 500
-        uint16 maxLev = uint16(OPEN_MAX_LEVERAGE_X100 - ((OPEN_MAX_LEVERAGE_X100 - CLOSED_MAX_LEVERAGE_X100) * progressBps) / 10000);
+        // Conservative rounding:
+        // 1. Max leverage rounded DOWN (floor) by ceiling the subtracted reduction
+        uint256 levReduction = ((uint256(OPEN_MAX_LEVERAGE_X100 - CLOSED_MAX_LEVERAGE_X100) * progressBps) + 9999) / 10000;
+        uint16 maxLev = uint16(OPEN_MAX_LEVERAGE_X100 - levReduction);
 
-        // IM = 1e6 / maxLev (in bps, e.g. 1000000 / 2000 = 500 bps; 1000000 / 500 = 2000 bps)
-        uint16 imBps = uint16(1_000_000 / maxLev);
+        // 2. Initial margin rounded UP (ceil): imBps = ceil(1e6 / maxLev)
+        uint16 imBps = uint16((1_000_000 + maxLev - 1) / maxLev);
 
-        // MM: Linear ramp from 2.50% (250 bps) to 6.00% (600 bps) to ensure continuity with CLOSED phase
-        // (Deviation from AGENTS.md Table 8.2 IM/2 formula, which would jump from 10% to 6% at the close boundary)
-        uint16 mmBps = uint16(OPEN_MAINTENANCE_MARGIN_BPS + ((CLOSED_MAINTENANCE_MARGIN_BPS - OPEN_MAINTENANCE_MARGIN_BPS) * progressBps) / 10000);
+        // 3. Maintenance margin stays at OPEN value (2.50%) throughout all of PRE_CLOSE.
+        //    Rationale: Ramping MM during PRE_CLOSE would make 20x positions (~4.94% equity)
+        //    liquidatable before the T-10m deleveraging window opens.
+        //    MM steps to 6.00% strictly upon entering CLOSED.
+        uint16 mmBps = OPEN_MAINTENANCE_MARGIN_BPS;
 
-        // OI cap: 100% -> 40%
-        // progressBps=0: baseOi; progressBps=10000: baseOi * 40 / 100
-        uint256 oiDiscount = (baseMaxOpenInterestUsd * 60 * progressBps) / (100 * 10000);
+        // 4. OI and Position caps rounded DOWN (floor) by ceiling the discount
+        uint256 oiDiscount = (baseMaxOpenInterestUsd * 60 * progressBps + (100 * 10000 - 1)) / (100 * 10000);
         uint256 maxOi = baseMaxOpenInterestUsd - oiDiscount;
 
-        uint256 posDiscount = (baseMaxPositionUsd * 60 * progressBps) / (100 * 10000);
+        uint256 posDiscount = (baseMaxPositionUsd * 60 * progressBps + (100 * 10000 - 1)) / (100 * 10000);
         uint256 maxPos = baseMaxPositionUsd - posDiscount;
 
-        // Funding multiplier: 10000 -> 20000
-        uint16 fundingMult = uint16(OPEN_FUNDING_MULT_BPS + ((CLOSED_FUNDING_MULT_BPS - OPEN_FUNDING_MULT_BPS) * progressBps) / 10000);
+        // 5. Funding multiplier rounded UP (ceil)
+        uint16 fundingMult = uint16(OPEN_FUNDING_MULT_BPS + (((uint256(CLOSED_FUNDING_MULT_BPS - OPEN_FUNDING_MULT_BPS) * progressBps) + 9999) / 10000));
 
         return RiskParams({
             phase: Phase.PRE_CLOSE,

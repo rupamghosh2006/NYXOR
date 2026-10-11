@@ -135,11 +135,15 @@ For each route, the research agent will report (VERIFIED/UNVERIFIED with officia
 
 ---
 
-## 2026-10-11 — Policy Deviation: Continuous Maintenance Margin Ramp in PRE_CLOSE
+## 2026-10-11 — Maintenance Margin Policy in PRE_CLOSE (Replaces previous continuity decision)
 
-**Decision:** In `MarketHoursRiskPolicy`, maintenance margin ramps linearly from 250 bps (2.50%) at PRE_CLOSE start to 600 bps (6.00%) at session close.
-**Reason:** In `AGENTS.md` Section 8.2 Table, `MM` is defined as `IM/2`. As `IM` ramps from 5% to 20%, `IM/2` reaches 10% right at close, then drops abruptly to 6% in `CLOSED`. This creates an artificial 400 bps discontinuity at the close boundary where positions could become liquidatable just before close and unliquidatable after close. Using a linear ramp from 2.50% to 6.00% ensures strict continuity with zero parameter jumps across all phase boundaries (only `reduceOnly` switches at close).
-**Alternatives:** Strict adherence to Table 8.2 (rejected due to liquidation discontinuity).
+**Decision:** In `MarketHoursRiskPolicy`, maintenance margin is held constant at the OPEN level (`250` bps = 2.50%) throughout all of `PRE_CLOSE`, and steps discretely to `600` bps (6.00%) strictly upon entering `CLOSED`.
+**Reason:** In the previous attempt at ramping MM from 2.5% to 6%, a 20x position opened during OPEN (initial equity ≈ 4.94% after 6 bps taker fee) would become liquidatable around T-18 min before close, *before* the keeper `deleverageToCap` window opens at T-10 min. That would prematurely liquidate sound positions with penalty instead of deleveraging them cleanly. Holding MM flat at 2.50% guarantees that positions with unchanged prices are never liquidatable at any second of `PRE_CLOSE`, giving keepers the intended window to deleverage over-cap positions to 5x. At `CLOSED`, MM steps to 6.00% to allow last-chance liquidations against the frozen official close price.
+**Conservative Rounding:**
+- Max leverage: rounded DOWN (floor)
+- Initial margin: rounded UP (ceil)
+- Position / OI caps: rounded DOWN (floor)
+- Funding multiplier: rounded UP (ceil)
 
 ---
 

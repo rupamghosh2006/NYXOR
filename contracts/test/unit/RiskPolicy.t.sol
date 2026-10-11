@@ -89,13 +89,52 @@ contract RiskPolicyTest is Test {
         assertEq(p.maxLeverageX100, 1250);
         // IM = 1_000_000 / 1250 = 800 bps (8.00%)
         assertEq(p.initialMarginBps, 800);
-        // MM = 250 + ((600 - 250) * 5000) / 10000 = 425 bps (4.25%)
-        assertEq(p.maintenanceMarginBps, 425);
+        // MM remains at OPEN level (250 bps = 2.50%) throughout PRE_CLOSE
+        assertEq(p.maintenanceMarginBps, 250);
         // OI cap: 100% -> 40% halfway: 70% of base
         assertEq(p.maxOpenInterestUsd, (BASE_OI * 70) / 100);
         // Funding: 1x -> 2x halfway: 15000 bps (1.50x)
         assertEq(p.fundingMultiplierBps, 15000);
         assertFalse(p.reduceOnly);
+    }
+
+    /// @notice Property test (a): A position opened at max leverage (20x, equity ~4.94% after 6 bps fee)
+    ///         with unchanged price is NEVER liquidatable at any second of PRE_CLOSE.
+    function testProperty_maxLeveragePositionNeverLiquidatableInPreClose() public view {
+        // 20x position with 6 bps fee -> net margin ratio = 500 - 6 = 494 bps
+        uint16 netEquityRatioBps = 494;
+
+        // Sample across the entire 3600-second pre-close window
+        for (uint256 sec = 0; sec < 3600; sec += 30) {
+            RiskParams memory p = guardedPolicy.getParams(MON_PRE_CLOSE_START + sec);
+            assertGe(
+                netEquityRatioBps,
+                p.maintenanceMarginBps,
+                "Position must not be liquidatable in PRE_CLOSE without price move"
+            );
+        }
+    }
+
+    /// @notice Property test (b): Maintenance margin is strictly less than initial margin at every second of PRE_CLOSE.
+    function testProperty_maintenanceMarginStrictlyLessThanInitialMarginInPreClose() public view {
+        for (uint256 sec = 0; sec < 3600; sec += 30) {
+            RiskParams memory p = guardedPolicy.getParams(MON_PRE_CLOSE_START + sec);
+            assertLt(
+                p.maintenanceMarginBps,
+                p.initialMarginBps,
+                "MM must be strictly less than IM throughout PRE_CLOSE"
+            );
+        }
+    }
+
+    /// @notice Test conservative rounding: maxLev rounded down, IM rounded up
+    function test_conservativeRounding() public view {
+        // At 1 second into pre-close (progress = 10000 / 3600 = 2.777... bps)
+        RiskParams memory p = guardedPolicy.getParams(MON_PRE_CLOSE_START + 1);
+        // unrounded lev: 2000 - (1500 * 2.777) / 10000 = 1999.58 -> floor = 1999
+        assertEq(p.maxLeverageX100, 1999);
+        // unrounded IM: 1e6 / 1999 = 500.25 -> ceil = 501 bps
+        assertEq(p.initialMarginBps, 501);
     }
 
     /// @notice Test that no parameter jumps at OPEN -> PRE_CLOSE boundary
@@ -116,7 +155,7 @@ contract RiskPolicyTest is Test {
         assertEq(preP.reduceOnly, openP.reduceOnly);
     }
 
-    /// @notice Test that no parameter jumps at PRE_CLOSE -> CLOSED boundary except reduceOnly
+    /// @notice Test PRE_CLOSE -> CLOSED boundary: continuous parameters match, while MM steps from 2.5% to 6.0%
     function test_guardedPolicy_continuousAtPreCloseClosedBoundary() public view {
         // Last second of PRE_CLOSE
         RiskParams memory preP    = guardedPolicy.getParams(MON_CLOSE - 1);
@@ -126,15 +165,19 @@ contract RiskPolicyTest is Test {
         assertEq(uint8(preP.phase),    uint8(Phase.PRE_CLOSE));
         assertEq(uint8(closedP.phase), uint8(Phase.CLOSED));
 
-        // Discrepancy bounded by 1 second discretization (at most 4-5 bps out of 3600 seconds)
+        // Continuous parameters match within 1-second discretization
         assertApproxEqAbs(preP.maxLeverageX100, closedP.maxLeverageX100, 2);
         assertApproxEqAbs(preP.initialMarginBps, closedP.initialMarginBps, 5);
-        assertApproxEqAbs(preP.maintenanceMarginBps, closedP.maintenanceMarginBps, 2);
-        assertApproxEqAbs(preP.maxOpenInterestUsd, closedP.maxOpenInterestUsd, 200 * 1e6); // <0.05% of 1M
+        assertApproxEqAbs(preP.maxOpenInterestUsd, closedP.maxOpenInterestUsd, 200 * 1e6);
         assertApproxEqAbs(preP.maxPositionUsd, closedP.maxPositionUsd, 20 * 1e6);
         assertApproxEqAbs(preP.fundingMultiplierBps, closedP.fundingMultiplierBps, 5);
 
-        // ONLY reduceOnly switches from false to true
+        // Intended discrete steps at CLOSED boundary:
+        // MM steps from 250 bps (2.5%) to 600 bps (6.0%) for last-chance liquidations at official close price
+        assertEq(preP.maintenanceMarginBps, 250);
+        assertEq(closedP.maintenanceMarginBps, 600);
+
+        // reduceOnly switches from false to true
         assertFalse(preP.reduceOnly);
         assertTrue(closedP.reduceOnly);
     }

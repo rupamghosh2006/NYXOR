@@ -91,13 +91,25 @@ contract MockPriceFeedTest is Test {
     }
 
     function test_checkpointClose_recordsWhenClosed() public {
-        // Warp clock to Friday after close (weekend)
+        // Warp clock to Friday after close (e.g. 100 seconds past close)
         vm.prank(admin);
         clock.setDemoOffset(int256(FRI_CLOSE + 100) - int256(block.timestamp));
 
         feed.checkpointClose();
         assertEq(feed.lastOfficialClosePrice(), INITIAL_PRICE);
-        assertEq(feed.lastCloseTimestamp(), clock.effectiveNow());
+        // Semantics: must record the scheduled close time (FRI_CLOSE), NEVER the call time
+        assertEq(feed.lastCloseTimestamp(), FRI_CLOSE);
+    }
+
+    function test_checkpointClose_revertsIfCalledTwiceInSameClosedSession() public {
+        vm.prank(admin);
+        clock.setDemoOffset(int256(FRI_CLOSE + 100) - int256(block.timestamp));
+
+        feed.checkpointClose();
+
+        // Second call in the same closed weekend session must revert
+        vm.expectRevert(MockPriceFeed.AlreadyCheckpointedForSession.selector);
+        feed.checkpointClose();
     }
 
     function test_closedPhase_doesNotOverwriteOfficialClosePrice() public {

@@ -75,7 +75,10 @@ contract LiquidityVault is AccessControl, ReentrancyGuard {
     function deposit(uint256 amount) external nonReentrant returns (uint256 shares) {
         if (amount == 0) revert ZeroAmount();
 
-        if (totalShares == 0 || vaultAssets == 0) {
+        if (vaultAssets == 0) {
+            // When vaultAssets is 0 (first deposit OR vault was completely wiped by insolvency),
+            // previous shares hold zero claimable value. Reset totalShares so fresh capital is not diluted.
+            totalShares = 0;
             shares = amount;
         } else {
             shares = (amount * totalShares) / vaultAssets;
@@ -130,22 +133,25 @@ contract LiquidityVault is AccessControl, ReentrancyGuard {
 
     /// @notice Settle realized trader PnL against vault assets
     /// @dev Called by PerpMarket when a position is closed or decreased.
-    ///      pnl > 0: trader won, vault pays out to market contract
+    ///      pnl > 0: trader won, vault pays out up to available vaultAssets (deficit recorded as bad debt)
     ///      pnl < 0: trader lost, market contract pays into vault
     function settleTraderPnl(int256 pnl) external onlyRole(MARKET_ROLE) {
         realizedTraderPnl += pnl;
 
         if (pnl > 0) {
-            uint256 payout = uint256(pnl);
-            // If vault equity is insufficient, payout is capped or absorbed
-            if (payout > vaultAssets) {
-                uint256 deficit = payout - vaultAssets;
+            uint256 requestedPayout = uint256(pnl);
+            uint256 actualPayout = requestedPayout;
+            if (requestedPayout > vaultAssets) {
+                uint256 deficit = requestedPayout - vaultAssets;
                 badDebtTotal += deficit;
+                actualPayout = vaultAssets;
                 vaultAssets = 0;
             } else {
-                vaultAssets -= payout;
+                vaultAssets -= requestedPayout;
             }
-            asset.safeTransfer(msg.sender, payout);
+            if (actualPayout > 0) {
+                asset.safeTransfer(msg.sender, actualPayout);
+            }
         } else if (pnl < 0) {
             uint256 loss = uint256(-pnl);
             vaultAssets += loss;
