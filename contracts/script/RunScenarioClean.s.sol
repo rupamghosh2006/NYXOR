@@ -25,14 +25,15 @@ contract RunScenarioCleanScript is Script {
     PerpMarket internal marketGuarded;
 
     function _loadContracts() internal {
-        usdc = DemoUSDC(0x0857fA382043d910Ae1e587e1756746c96F7A169);
-        clock = MarketClock(0x6f09eF68d78BfB1e8BDa9B389bB54e35C27265B9);
-        feedStandard = MockPriceFeed(0x809B492BdfC43A36392821bcC684b0020b345fCe);
-        feedGuarded = MockPriceFeed(0x1710E8C0310186280AbAE3889278EA55c0A53b50);
-        vaultStandard = LiquidityVault(0x7f758330d60bd3B51E94B2582e4c05DFAbE765F8);
-        vaultGuarded = LiquidityVault(0x442697fea0BAF3775149B415d502e8c06dF05e92);
-        marketStandard = PerpMarket(payable(0xd0f198adCa10703D8a85355120aD806B850Dca75));
-        marketGuarded = PerpMarket(payable(0x724b9525b6Dd7Cc81ad37a06b1A20006BBDc83cB));
+        string memory json = vm.readFile("../deployments/fuji-benchmark.json");
+        usdc = DemoUSDC(vm.parseJsonAddress(json, ".DemoUSDC"));
+        clock = MarketClock(vm.parseJsonAddress(json, ".MarketClock"));
+        feedStandard = MockPriceFeed(vm.parseJsonAddress(json, ".MockPriceFeedStandard"));
+        feedGuarded = MockPriceFeed(vm.parseJsonAddress(json, ".MockPriceFeedGuarded"));
+        vaultStandard = LiquidityVault(vm.parseJsonAddress(json, ".LiquidityVaultStandard"));
+        vaultGuarded = LiquidityVault(vm.parseJsonAddress(json, ".LiquidityVaultGuarded"));
+        marketStandard = PerpMarket(payable(vm.parseJsonAddress(json, ".PerpMarketStandard")));
+        marketGuarded = PerpMarket(payable(vm.parseJsonAddress(json, ".PerpMarketGuarded")));
     }
 
     function run() external {
@@ -62,9 +63,9 @@ contract RunScenarioCleanScript is Script {
         feedStandard.setPrice(INITIAL_PRICE);
         feedGuarded.setPrice(INITIAL_PRICE);
 
-        if (t1.balance < 0.02 ether) payable(t1).transfer(0.03 ether);
-        if (t2.balance < 0.02 ether) payable(t2).transfer(0.03 ether);
-        if (t3.balance < 0.02 ether) payable(t3).transfer(0.03 ether);
+        if (t1.balance < 0.03 ether) payable(t1).transfer(0.05 ether);
+        if (t2.balance < 0.03 ether) payable(t2).transfer(0.05 ether);
+        if (t3.balance < 0.03 ether) payable(t3).transfer(0.05 ether);
 
         usdc.mint(t1, 50_000 * 1e6);
         usdc.mint(t2, 50_000 * 1e6);
@@ -75,8 +76,8 @@ contract RunScenarioCleanScript is Script {
         vm.startBroadcast(t1Key);
         usdc.approve(address(marketStandard), type(uint256).max);
         usdc.approve(address(marketGuarded), type(uint256).max);
-        marketStandard.openPosition(true, 10_000 * 1e6, 2000);
-        marketGuarded.openPosition(true, 10_000 * 1e6, 2000);
+        marketStandard.openPosition{gas: 500000}(true, 10_000 * 1e6, 2000);
+        marketGuarded.openPosition{gas: 500000}(true, 10_000 * 1e6, 2000);
         vm.stopBroadcast();
         console2.log("T1 opened 20x Long on Standard & Guarded");
 
@@ -84,8 +85,8 @@ contract RunScenarioCleanScript is Script {
         vm.startBroadcast(t2Key);
         usdc.approve(address(marketStandard), type(uint256).max);
         usdc.approve(address(marketGuarded), type(uint256).max);
-        marketStandard.openPosition(true, 8_000 * 1e6, 1000);
-        marketGuarded.openPosition(true, 8_000 * 1e6, 1000);
+        marketStandard.openPosition{gas: 500000}(true, 8_000 * 1e6, 1000);
+        marketGuarded.openPosition{gas: 500000}(true, 8_000 * 1e6, 1000);
         vm.stopBroadcast();
         console2.log("T2 opened 10x Long on Standard & Guarded");
 
@@ -93,8 +94,8 @@ contract RunScenarioCleanScript is Script {
         vm.startBroadcast(t3Key);
         usdc.approve(address(marketStandard), type(uint256).max);
         usdc.approve(address(marketGuarded), type(uint256).max);
-        marketStandard.openPosition(false, 6_000 * 1e6, 1000);
-        marketGuarded.openPosition(false, 6_000 * 1e6, 1000);
+        marketStandard.openPosition{gas: 500000}(false, 6_000 * 1e6, 1000);
+        marketGuarded.openPosition{gas: 500000}(false, 6_000 * 1e6, 1000);
         vm.stopBroadcast();
         console2.log("T3 opened 10x Short on Standard & Guarded");
 
@@ -104,9 +105,10 @@ contract RunScenarioCleanScript is Script {
         feedStandard.setPrice(INITIAL_PRICE);
         feedGuarded.setPrice(INITIAL_PRICE);
 
-        console2.log("Deleveraging Guarded T1 and T2...");
+        console2.log("Deleveraging Guarded T1, T2, and T3...");
         marketGuarded.deleverageToCap{gas: 500000}(t1);
         marketGuarded.deleverageToCap{gas: 500000}(t2);
+        marketGuarded.deleverageToCap{gas: 500000}(t3);
 
         // ── Phase 4: CLOSED (Saturday) — Checkpoint Close ────────────────────
         clock.setDemoOffset(int256(FRI_CLOSE + 7200) - int256(block.timestamp));

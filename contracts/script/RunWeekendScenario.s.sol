@@ -116,9 +116,11 @@ contract RunWeekendScenarioScript is Script {
         console2.log("Phase at T-5m: PRE_CLOSE. Keeper deleveraging Guarded positions to 5.00x cap...");
         marketGuarded.deleverageToCap(t1);
         marketGuarded.deleverageToCap(t2);
+        marketGuarded.deleverageToCap(t3);
 
         console2.log("Guarded T1 leverage cut to:", marketGuarded.getLeverage(t1));
         console2.log("Guarded T2 leverage cut to:", marketGuarded.getLeverage(t2));
+        console2.log("Guarded T3 leverage cut to:", marketGuarded.getLeverage(t3));
 
         // ── Phase 4: CLOSED (Weekend) — Checkpoint Close Price ─────────────────
         clock.setDemoOffset(int256(FRI_CLOSE + 3600) - int256(block.timestamp));

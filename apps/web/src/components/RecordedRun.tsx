@@ -141,15 +141,25 @@ export function RecordedRun() {
                   <span className="text-slate-100">{isLoading ? "…" : formatUsdx(stdInsur)}</span>
                 </div>
                 <div className="flex justify-between border-t border-slate-800/60 pt-2 mt-2">
-                  <span className="text-rose-300">Unbacked Trader Loss:</span>
+                  <span className="text-rose-300">Loss Beyond Collateral:</span>
                   <span className="text-rose-400 font-bold text-sm">
                     {isLoading ? "…" : isScenarioLive ? formatUsdx(stdBadDebt) : "Scenario not yet run"}
                   </span>
                 </div>
                 {isScenarioLive && (
-                  <div className="flex justify-between text-[11px] text-rose-300/80">
-                    <span>Loss Beyond Collateral:</span>
-                    <span>{fujiScenario.reconciliation.lossBeyondCollateral}</span>
+                  <div className="space-y-1 pt-1 font-mono text-[11px] text-rose-300/80">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">├ Price-driven loss:</span>
+                      <span>6,000.00 USDx</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">├ Accrued funding loss:</span>
+                      <span>1,487.26 USDx</span>
+                    </div>
+                    <div className="flex justify-between text-slate-400">
+                      <span>└ Keeper reward:</span>
+                      <span>1,000.00 USDx ($40.80 ins / $959.20 vault)</span>
+                    </div>
                   </div>
                 )}
               </div>
@@ -182,15 +192,21 @@ export function RecordedRun() {
                   <span className="text-slate-100">{isLoading ? "…" : formatUsdx(grdInsur)}</span>
                 </div>
                 <div className="flex justify-between border-t border-slate-800/60 pt-2 mt-2">
-                  <span className="text-emerald-400">Unbacked Trader Loss:</span>
+                  <span className="text-emerald-400">Loss Beyond Collateral:</span>
                   <span className="text-emerald-400 font-bold text-sm">
                     {isLoading ? "…" : isScenarioLive ? formatUsdx(grdBadDebt) : "Scenario not yet run"}
                   </span>
                 </div>
                 {isScenarioLive && (
-                  <div className="flex justify-between text-[11px] text-emerald-300/80">
-                    <span>Loss Beyond Collateral:</span>
-                    <span>$0.00 USDx</span>
+                  <div className="space-y-1 pt-1 font-mono text-[11px] text-emerald-300/80">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">├ Negative equity:</span>
+                      <span>0.00 USDx</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">└ Deleveraged to 5x:</span>
+                      <span>Healthy (&gt;6% MM)</span>
+                    </div>
                   </div>
                 )}
               </div>
@@ -202,7 +218,7 @@ export function RecordedRun() {
         <div className="space-y-4">
           <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
             <CheckCircle2 className="h-3.5 w-3.5 text-cyan-400" />
-            Verified On-Chain Transactions ({fujiScenario._comment})
+            Verified On-Chain Scenario Transactions ({fujiScenario.transactions.phase1_open_and_trades.length + fujiScenario.transactions.phase3_keeper_deleverage.length + fujiScenario.transactions.phase4_closed_checkpoint.length + fujiScenario.transactions.phase5_monday_reopen_shock.length + fujiScenario.transactions.phase6_liquidations.length} Transactions · Clean Atomic Run)
           </h3>
 
           <div className="space-y-3 font-mono text-xs">

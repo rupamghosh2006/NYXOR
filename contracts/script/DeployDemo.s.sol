@@ -97,7 +97,8 @@ contract DeployDemoScript is Script {
         vm.serializeAddress(json, "PerpMarketStandard", address(marketStandard));
         string memory finalJson = vm.serializeAddress(json, "PerpMarketGuarded", address(marketGuarded));
 
-        vm.writeJson(finalJson, "../deployments/demo-latest.json");
-        console2.log("Wrote fresh demo deployment to deployments/demo-latest.json");
+        string memory exportPath = vm.envOr("DEPLOY_TARGET_PATH", string("../deployments/demo-latest.json"));
+        vm.writeJson(finalJson, exportPath);
+        console2.log("Wrote deployment to:", exportPath);
     }
 }

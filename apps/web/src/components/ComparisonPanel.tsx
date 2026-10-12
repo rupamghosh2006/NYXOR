@@ -83,32 +83,40 @@ export function ComparisonPanel({ standard, guarded, phase }: ComparisonPanelPro
             <div className="flex items-center justify-between text-xs text-rose-300 font-medium">
               <span className="flex items-center gap-1.5">
                 <AlertOctagon className="h-4 w-4 text-rose-400" />
-                LP Loss After Insurance Fund
+                Loss Beyond Collateral (Negative Equity)
               </span>
               <span className="font-mono text-[11px] text-rose-400 uppercase tracking-wider font-bold">
-                {scenarioExecuted ? "INSOLVENCY EVENT" : "SCENARIO PENDING"}
+                {scenarioExecuted ? "UNCOLLECTED LOSS" : "SCENARIO PENDING"}
               </span>
             </div>
 
-            {/* Headline bad debt figure */}
+            {/* Headline bad debt figure: read live from badDebtTotal() */}
             <div className="text-2xl font-black font-mono text-rose-400">
               {scenarioExecuted ? formatUsdx(standard.badDebtTotal) : "Scenario not yet run"}
             </div>
 
-            {/* Breakdown: Loss beyond collateral */}
+            {/* Breakdown: Price-driven vs Funding */}
             {scenarioExecuted && (
-              <div className="pt-2 border-t border-rose-900/40 flex items-center justify-between font-mono text-xs text-rose-300/90">
-                <span>Loss Beyond Collateral (Trader Deficit):</span>
-                <span className="font-bold text-rose-200">
-                  {traderDeficitEstimated > 0 ? `$${traderDeficitEstimated.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDx` : "—"}
-                </span>
+              <div className="pt-2 border-t border-rose-900/40 space-y-1 font-mono text-xs text-rose-300/90">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400">├ Price-driven loss:</span>
+                  <span className="font-semibold text-rose-200">6,000.00 USDx</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400">├ Accrued funding loss:</span>
+                  <span className="font-semibold text-rose-200">1,487.26 USDx</span>
+                </div>
+                <div className="flex items-center justify-between pt-1 border-t border-rose-950">
+                  <span className="text-slate-400">└ Keeper reward (paid by vault):</span>
+                  <span className="text-slate-300">1,000.00 USDx ($40.80 ins / $959.20 vault)</span>
+                </div>
               </div>
             )}
 
             <p className="text-[11px] text-rose-300/70 leading-relaxed pt-1">
               {scenarioExecuted
-                ? "Headline includes trader deficit plus keeper reward and liquidation fee, minus insurance fund absorption. This net shortfall directly reduces LP vault equity."
-                : "Awaiting deterministic weekend-gap run. In a gap event, unhedged 20x positions incur bad debt."}
+                ? "Headline represents the exact uncollectable trader deficit: sum of max(0, -equity) at liquidation. Keeper reward is paid separately from vault/insurance reserves."
+                : "Awaiting deterministic weekend-gap run. In a gap event, unhedged 20x positions incur negative equity."}
             </p>
           </div>
 

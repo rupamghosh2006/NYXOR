@@ -193,13 +193,15 @@ contract PerpMarket is IPerpMarket, ReentrancyGuard, AccessControl {
             vault.settleTraderPnl(-int256(loss));
         }
 
-        // Net payout to trader: collateral + pnl - fundingPaid - closeFee
-        int256 netPayout = int256(pos.collateral) + pnl - fundingPaid - int256(closeFee);
-        uint256 payout = netPayout > 0 ? uint256(netPayout) : 0;
+        // Available balance for trader from their collateral + pnl
+        int256 netEquity = int256(pos.collateral) + pnl - fundingPaid;
+        uint256 available = netEquity > 0 ? uint256(netEquity) : 0;
+        uint256 actualFee = closeFee > available ? available : closeFee;
+        uint256 payout = available - actualFee;
 
-        if (closeFee > 0) {
-            collateralToken.forceApprove(address(vault), closeFee);
-            vault.receiveFee(closeFee, INSURANCE_FEE_SHARE_BPS);
+        if (actualFee > 0) {
+            collateralToken.forceApprove(address(vault), actualFee);
+            vault.receiveFee(actualFee, INSURANCE_FEE_SHARE_BPS);
         }
 
         if (payout > 0) {
@@ -258,17 +260,21 @@ contract PerpMarket is IPerpMarket, ReentrancyGuard, AccessControl {
 
         settleFunding();
 
-        uint256 currentTs = clock.effectiveNow();
-        (Phase phase,,) = schedule.phaseAt(currentTs);
-        uint256 currentPrice = _getExecutionPrice(phase);
+        uint256 currentPrice;
+        int256 equity;
+        {
+            uint256 currentTs = clock.effectiveNow();
+            (Phase phase,,) = schedule.phaseAt(currentTs);
+            currentPrice = _getExecutionPrice(phase);
 
-        RiskParams memory params = riskPolicy.getParams(currentTs);
-        int256 pnl = _calculatePnl(pos.isLong, pos.sizeUsd, pos.entryPrice, currentPrice);
-        int256 fundingPaid = _calculateAccruedFunding(pos);
-        int256 equity = int256(pos.collateral) + pnl - fundingPaid;
+            RiskParams memory params = riskPolicy.getParams(currentTs);
+            int256 pnl = _calculatePnl(pos.isLong, pos.sizeUsd, pos.entryPrice, currentPrice);
+            int256 fundingPaid = _calculateAccruedFunding(pos);
+            equity = int256(pos.collateral) + pnl - fundingPaid;
 
-        uint256 mmUsd = (pos.sizeUsd * params.maintenanceMarginBps) / 10000;
-        if (equity >= int256(mmUsd)) revert PositionHealthy();
+            uint256 mmUsd = (pos.sizeUsd * params.maintenanceMarginBps) / 10000;
+            if (equity >= int256(mmUsd)) revert PositionHealthy();
+        }
 
         // Position is liquidatable
         if (pos.isLong) {
@@ -282,49 +288,61 @@ contract PerpMarket is IPerpMarket, ReentrancyGuard, AccessControl {
         uint256 keeperReward = (pos.sizeUsd * KEEPER_REWARD_BPS) / 10000;
         uint256 insuranceContrib = (pos.sizeUsd * INSURANCE_PENALTY_BPS) / 10000;
 
-        uint256 shortfall = 0;
-        if (equity <= 0) {
-            // Bad debt case: trader losses exceed collateral!
-            uint256 deficit = uint256(-equity);
-            shortfall = deficit + keeperReward + insuranceContrib;
+        uint256 shortfall = _settleLiquidation(trader, pos, equity, keeperReward, insuranceContrib);
 
-            // Trader collateral transferred to vault to offset loss
+        emit Liquidated(trader, msg.sender, currentPrice, equity, shortfall);
+    }
+
+    function _settleLiquidation(
+        address trader,
+        Position memory pos,
+        int256 equity,
+        uint256 keeperReward,
+        uint256 insuranceContrib
+    ) internal returns (uint256 shortfall) {
+        if (equity <= 0) {
+            uint256 deficit = uint256(-equity);
+            shortfall = deficit;
+
             if (pos.collateral > 0) {
                 collateralToken.forceApprove(address(vault), pos.collateral);
                 vault.settleTraderPnl(-int256(pos.collateral));
             }
 
-            // Vault covers the shortfall (from insurance fund first, then vault LP bad debt)
-            vault.coverShortfall(shortfall);
-
-            // Pay keeper reward
-            collateralToken.safeTransfer(msg.sender, keeperReward);
-            // Pay insurance contribution back into insurance fund
-            collateralToken.forceApprove(address(vault), insuranceContrib);
-            vault.receiveInsuranceFundContribution(insuranceContrib);
+            vault.recordBadDebt(trader, deficit);
+            vault.payKeeperReward(msg.sender, keeperReward);
         } else {
-            // Partial equity remains (> 0 but < MM)
             uint256 remainingEquity = uint256(equity);
-            uint256 penalty = keeperReward + insuranceContrib;
+            uint256 traderLoss = pos.collateral > remainingEquity ? pos.collateral - remainingEquity : 0;
+            if (traderLoss > 0) {
+                collateralToken.forceApprove(address(vault), traderLoss);
+                vault.settleTraderPnl(-int256(traderLoss));
+            }
 
+            uint256 penalty = keeperReward + insuranceContrib;
             if (remainingEquity >= penalty) {
                 collateralToken.safeTransfer(msg.sender, keeperReward);
                 collateralToken.forceApprove(address(vault), insuranceContrib);
                 vault.receiveInsuranceFundContribution(insuranceContrib);
 
-                uint256 traderLoss = pos.collateral > remainingEquity ? pos.collateral - remainingEquity : 0;
-                if (traderLoss > 0) {
-                    collateralToken.forceApprove(address(vault), traderLoss);
-                    vault.settleTraderPnl(-int256(traderLoss));
+                uint256 refund = remainingEquity - penalty;
+                if (refund > 0) {
+                    collateralToken.safeTransfer(trader, refund);
+                }
+            } else if (remainingEquity >= keeperReward) {
+                collateralToken.safeTransfer(msg.sender, keeperReward);
+                uint256 toInsurance = remainingEquity - keeperReward;
+                if (toInsurance > 0) {
+                    collateralToken.forceApprove(address(vault), toInsurance);
+                    vault.receiveInsuranceFundContribution(toInsurance);
                 }
             } else {
-                uint256 shortfallDeficit = penalty - remainingEquity;
-                vault.coverShortfall(shortfallDeficit);
-                collateralToken.safeTransfer(msg.sender, keeperReward);
+                if (remainingEquity > 0) {
+                    collateralToken.safeTransfer(msg.sender, remainingEquity);
+                }
+                vault.payKeeperReward(msg.sender, keeperReward - remainingEquity);
             }
         }
-
-        emit Liquidated(trader, msg.sender, currentPrice, equity, shortfall);
     }
 
     /// @inheritdoc IPerpMarket

@@ -207,7 +207,7 @@ contract LiquidityVaultTest is Test {
         assertEq(vault.vaultAssets(), SEED_AMOUNT); // LP equity untouched!
     }
 
-    function test_coverShortfall_exceedsInsurance_createsBadDebt() public {
+    function test_coverShortfall_exceedsInsurance_reducesVaultAssets() public {
         vm.prank(lp1);
         vault.deposit(SEED_AMOUNT);
 
@@ -215,15 +215,37 @@ contract LiquidityVaultTest is Test {
         vm.prank(market);
         vault.receiveInsuranceFundContribution(10_000 * 1e6);
 
-        // Gap causes 40,000 USDC shortfall (e.g. Standard naive market)
+        // Gap causes 40,000 USDC cash shortfall payout
         vm.prank(market);
         (uint256 fromIns, uint256 fromVault) = vault.coverShortfall(40_000 * 1e6);
 
         assertEq(fromIns, 10_000 * 1e6);
         assertEq(fromVault, 30_000 * 1e6);
         assertEq(vault.insuranceFund(), 0);
-        assertEq(vault.badDebtTotal(), 30_000 * 1e6); // 30k bad debt recorded
         assertEq(vault.vaultAssets(), SEED_AMOUNT - 30_000 * 1e6); // LP assets reduced!
+    }
+
+    function test_recordBadDebt_and_payKeeperReward() public {
+        vm.prank(lp1);
+        vault.deposit(SEED_AMOUNT);
+
+        address trader = makeAddr("trader");
+        address keeperAddr = makeAddr("keeperAddr");
+
+        // Record 15,000 uncollectable negative equity
+        vm.prank(market);
+        vault.recordBadDebt(trader, 15_000 * 1e6);
+        assertEq(vault.badDebtTotal(), 15_000 * 1e6);
+
+        // Pay 1,000 keeper reward from vault assets (insuranceFund is 0)
+        vm.prank(market);
+        (uint256 fromIns, uint256 fromVault) = vault.payKeeperReward(keeperAddr, 1_000 * 1e6);
+
+        assertEq(fromIns, 0);
+        assertEq(fromVault, 1_000 * 1e6);
+        assertEq(vault.keeperRewardsPaidTotal(), 1_000 * 1e6);
+        assertEq(usdc.balanceOf(keeperAddr), 1_000 * 1e6);
+        assertEq(vault.vaultAssets(), SEED_AMOUNT - 1_000 * 1e6);
     }
 
     /// @notice Confirms LP share price uses vaultAssets only, NOT insuranceFund

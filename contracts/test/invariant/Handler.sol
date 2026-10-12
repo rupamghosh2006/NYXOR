@@ -137,6 +137,22 @@ contract Handler is Test {
         feed.setPrice(currentPrice);
     }
 
+    function liquidateTrader(uint256 traderSeed) external {
+        address trader = traders[traderSeed % traders.length];
+        IPerpMarket.Position memory pos = market.getPosition(trader);
+        if (!pos.active) return;
+
+        address keeper = makeAddr("random_keeper");
+        vm.prank(keeper);
+        try market.liquidate(trader) {} catch {}
+    }
+
+    function changePrice(int256 shockBpsRaw) external {
+        int256 shockBps = bound(shockBpsRaw, -1500, 1500); // +/- 15% shock
+        vm.prank(admin);
+        feed.queueShock(shockBps);
+    }
+
     function getTraders() external view returns (address[] memory) {
         return traders;
     }

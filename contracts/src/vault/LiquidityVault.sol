@@ -26,7 +26,8 @@ contract LiquidityVault is AccessControl, ReentrancyGuard {
     // Accounting buckets (6-decimal units)
     uint256 public vaultAssets;       // LP principal + LP profits/losses
     uint256 public insuranceFund;      // Reserved buffer for liquidations/gaps
-    uint256 public badDebtTotal;      // Cumulative shortfall that eroded LP equity
+    uint256 public badDebtTotal;      // Cumulative uncollectable trader negative equity: sum(max(0, -equity))
+    uint256 public keeperRewardsPaidTotal; // Cumulative keeper rewards paid by vault
     int256 public realizedTraderPnl;  // Net cumulative trader PnL realized against vault
     uint256 public lockedExposure;    // Liquidity reserved as counterparty for open positions
 
@@ -35,6 +36,8 @@ contract LiquidityVault is AccessControl, ReentrancyGuard {
     event Withdrawn(address indexed lp, uint256 assets, uint256 shares, uint256 epoch);
     event FeeReceived(uint256 totalFee, uint256 insurancePortion, uint256 vaultPortion);
     event ShortfallCovered(uint256 totalShortfall, uint256 paidByInsurance, uint256 paidByVaultBadDebt);
+    event BadDebtRecorded(address indexed trader, uint256 negativeEquity, uint256 newBadDebtTotal);
+    event KeeperRewardPaid(address indexed keeper, uint256 amount, uint256 paidByInsurance, uint256 paidByVault);
     event TraderPnlSettled(int256 pnl, uint256 newVaultAssets);
     event LockedExposureUpdated(uint256 newLockedExposure);
     event EpochAdvanced(uint256 newEpoch);
@@ -177,9 +180,41 @@ contract LiquidityVault is AccessControl, ReentrancyGuard {
         emit TraderPnlSettled(pnl, vaultAssets);
     }
 
-    /// @notice Covers bad debt shortfall from liquidations
-    /// @dev First drains the insurance fund; any remaining deficit reduces vault assets
-    ///      and accumulates in badDebtTotal.
+    /// @notice Records uncollectable trader negative equity (loss beyond collateral)
+    /// @dev Counter only. Does NOT transfer tokens because negative equity cannot be collected from the trader.
+    function recordBadDebt(address trader, uint256 negativeEquity) external onlyRole(MARKET_ROLE) {
+        if (negativeEquity == 0) return;
+        badDebtTotal += negativeEquity;
+        emit BadDebtRecorded(trader, negativeEquity, badDebtTotal);
+    }
+
+    /// @notice Pays keeper liquidation reward directly from vault/insurance reserves to the liquidator
+    function payKeeperReward(address keeper, uint256 rewardAmount) external onlyRole(MARKET_ROLE) returns (uint256 paidByInsurance, uint256 paidByVault) {
+        if (rewardAmount == 0) return (0, 0);
+        keeperRewardsPaidTotal += rewardAmount;
+
+        if (insuranceFund >= rewardAmount) {
+            insuranceFund -= rewardAmount;
+            paidByInsurance = rewardAmount;
+            paidByVault = 0;
+        } else {
+            paidByInsurance = insuranceFund;
+            paidByVault = rewardAmount - insuranceFund;
+            insuranceFund = 0;
+
+            if (vaultAssets >= paidByVault) {
+                vaultAssets -= paidByVault;
+            } else {
+                vaultAssets = 0;
+            }
+        }
+
+        asset.safeTransfer(keeper, rewardAmount);
+        emit KeeperRewardPaid(keeper, rewardAmount, paidByInsurance, paidByVault);
+    }
+
+    /// @notice Covers external shortfall payouts
+    /// @dev First drains the insurance fund; any remaining deficit reduces vault assets.
     function coverShortfall(uint256 shortfallAmount) external onlyRole(MARKET_ROLE) returns (uint256 paidByInsurance, uint256 paidByVault) {
         if (shortfallAmount == 0) return (0, 0);
 
@@ -192,7 +227,6 @@ contract LiquidityVault is AccessControl, ReentrancyGuard {
             paidByVault = shortfallAmount - insuranceFund;
             insuranceFund = 0;
 
-            badDebtTotal += paidByVault;
             if (vaultAssets >= paidByVault) {
                 vaultAssets -= paidByVault;
             } else {

@@ -78,12 +78,8 @@ contract TokenConservationInvariantTest is Test {
         targetContract(address(handler));
     }
 
-    /// @notice Core Invariant: Total tokens held by (market + vault) >= sum(traderCollateral) + vaultAssets + insuranceFund
-    function invariant_tokenConservation() public view {
-        uint256 marketBal = usdc.balanceOf(address(market));
-        uint256 vaultBal = usdc.balanceOf(address(vault));
-        uint256 totalInSystem = marketBal + vaultBal;
-
+    /// @notice Invariant 1: Market holds exactly the sum of collateral of all active open positions
+    function invariant_marketCollateralConservation() public view {
         address[] memory traders = handler.getTraders();
         uint256 totalTraderCollateral = 0;
         for (uint256 i = 0; i < traders.length; i++) {
@@ -92,13 +88,53 @@ contract TokenConservationInvariantTest is Test {
                 totalTraderCollateral += pos.collateral;
             }
         }
-
-        uint256 totalClaims = totalTraderCollateral + vault.vaultAssets() + vault.insuranceFund();
-
-        assertGe(
-            totalInSystem,
-            totalClaims,
-            "Conservation invariant violated: tokens in system less than claims"
+        assertEq(
+            usdc.balanceOf(address(market)),
+            totalTraderCollateral,
+            "Exact Market Collateral Invariant Violated: market balance != sum of open collateral"
         );
+    }
+
+    /// @notice Invariant 2: Vault holds exactly LP assets plus segregated insurance reserves
+    function invariant_vaultReserveConservation() public view {
+        assertEq(
+            usdc.balanceOf(address(vault)),
+            vault.vaultAssets() + vault.insuranceFund(),
+            "Exact Vault Reserve Invariant Violated: vault balance != vaultAssets + insuranceFund"
+        );
+    }
+
+    /// @notice Explicit liquidation test with negative equity asserting both two-sided invariants
+    function test_liquidate_negativeEquity_exactConservationInvariants() public {
+        address trader = handler.getTraders()[0];
+
+        // Open 20x Long with 10,000 USDx margin (200k notional)
+        vm.prank(trader);
+        market.openPosition(true, 10_000 * 1e6, 2000);
+
+        // Assert invariants immediately after open
+        invariant_marketCollateralConservation();
+        invariant_vaultReserveConservation();
+
+        // Shock price by -8% (4150 -> 3818): gross loss = -16,000 USDx > 10,000 collateral -> negative equity!
+        vm.prank(admin);
+        feed.queueShock(-800);
+
+        // Liquidate trader
+        address liquidator = makeAddr("liquidator");
+        vm.prank(liquidator);
+        market.liquidate(trader);
+
+        // Position is closed and trader wiped
+        assertFalse(market.getPosition(trader).active);
+
+        // Negative equity recorded in badDebtTotal
+        assertGt(vault.badDebtTotal(), 0);
+        // Liquidator received reward
+        assertGt(usdc.balanceOf(liquidator), 0);
+
+        // Both exact invariants hold with ZERO stranded tokens!
+        invariant_marketCollateralConservation();
+        invariant_vaultReserveConservation();
     }
 }

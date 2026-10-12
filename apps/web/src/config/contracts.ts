@@ -42,9 +42,9 @@ export function getAddressesForInstance(instance: DeploymentInstance) {
 export const CONTRACT_ADDRESSES = BENCHMARK_CONTRACT_ADDRESSES;
 
 export const DEPLOYMENT_METADATA = {
-  status: benchmarkDeployments.status,
-  deployedAt: benchmarkDeployments.deployedAt,
-  scenarioExecutedAt: benchmarkDeployments.scenarioExecutedAt,
+  status: (benchmarkDeployments as any).status || "frozen_benchmark",
+  deployedAt: (benchmarkDeployments as any).deployedAt || "2026-10-12T18:38:05Z",
+  scenarioExecutedAt: (benchmarkDeployments as any).scenarioExecutedAt || "2026-10-12T18:41:07Z",
   deployTxComment: benchmarkDeployments._comment,
 };
 

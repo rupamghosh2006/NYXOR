@@ -357,4 +357,60 @@ contract WeekendGapScenarioTest is Test {
         // Guarded bad debt is dramatically lower than Standard (< 25% of Standard bad debt)
         assertLt(guardedBadDebt, stdBadDebt / 4, "Guarded bad debt must be < 25% of Standard bad debt");
     }
+
+    /// @notice Short-side stress case: a 20x short on both markets with a +8% gap shock.
+    ///         On Standard, the short is wiped past collateral into bad debt.
+    ///         On Guarded, keeper deleverages the short to 5x before close; the 5x short survives the +8% rise with ZERO bad debt.
+    function test_weekend_gap_scenario_shortSidePlus8PercentShock() public {
+        // Step 1: Open mirror 20x Short positions
+        vm.prank(t1);
+        marketStandard.openPosition(false, 10_000 * 1e6, 2000); // 200k Short
+        vm.prank(t1);
+        marketGuarded.openPosition(false, 10_000 * 1e6, 2000); // 200k Short
+
+        // Step 2: PRE_CLOSE keeper deleveraging on Guarded
+        vm.prank(admin);
+        clock.setDemoOffset(int256(FRI_CLOSE - 300) - int256(block.timestamp));
+        vm.startPrank(admin);
+        feedStandard.setPrice(INITIAL_PRICE);
+        feedGuarded.setPrice(INITIAL_PRICE);
+        vm.stopPrank();
+
+        vm.prank(keeper);
+        marketGuarded.deleverageToCap(t1);
+        assertLe(marketGuarded.getLeverage(t1), 500, "Guarded short must be deleveraged to <= 5x");
+
+        // Step 3: CLOSED checkpoint
+        vm.prank(admin);
+        clock.setDemoOffset(int256(FRI_CLOSE + 3600) - int256(block.timestamp));
+        feedStandard.checkpointClose();
+        feedGuarded.checkpointClose();
+
+        // Step 4: Monday Reopen with +8% gap shock (4,150 -> 4,482 USD)
+        uint256 monOpen = FRI_OPEN + 3 * 86_400;
+        vm.prank(admin);
+        clock.setDemoOffset(int256(monOpen) - int256(block.timestamp));
+
+        vm.prank(admin);
+        feedStandard.queueShock(800); // +800 bps = +8%
+        vm.prank(admin);
+        feedGuarded.queueShock(800);
+
+        // Step 5: Liquidate on Standard market
+        // Standard 20x Short: +8% price rise -> 200k * 8% = 16,000 loss > 10,000 collateral -> bad debt!
+        vm.prank(keeper);
+        marketStandard.liquidate(t1);
+
+        uint256 stdBadDebt = vaultStandard.badDebtTotal();
+        assertGt(stdBadDebt, 0, "Standard market must accumulate bad debt on +8% gap against 20x short");
+
+        // Step 6: Guarded short was deleveraged to 5x. An 8% price increase is only 40% loss of collateral!
+        // Position remains healthy (> 6% MM)
+        vm.prank(keeper);
+        vm.expectRevert(PerpMarket.PositionHealthy.selector);
+        marketGuarded.liquidate(t1);
+
+        uint256 guardedBadDebt = vaultGuarded.badDebtTotal();
+        assertEq(guardedBadDebt, 0, "Guarded market must have ZERO bad debt on +8% gap against deleveraged short");
+    }
 }

@@ -69,9 +69,9 @@ When a market price gaps past the liquidation threshold, equity becomes negative
 ## 3. Worked Example: Clean On-Chain Weekend-Gap Run
 
 Reconciliation from the single-pass on-chain scenario execution on Avalanche Fuji C-Chain:
-- **`LiquidityVaultStandard`:** [`0x7f758330d60bd3B51E94B2582e4c05DFAbE765F8`](https://testnet.snowscan.xyz/address/0x7f758330d60bd3B51E94B2582e4c05DFAbE765F8)
-- **`LiquidityVaultGuarded`:** [`0x442697fea0BAF3775149B415d502e8c06dF05e92`](https://testnet.snowscan.xyz/address/0x442697fea0BAF3775149B415d502e8c06dF05e92)
-- **Liquidation Transaction Receipt:** [`0x9e0eed1a20f6dadc8bf268c6fe2f32e768aeae30dae91b222c5347c896c0b5be`](https://testnet.snowscan.xyz/tx/0x9e0eed1a20f6dadc8bf268c6fe2f32e768aeae30dae91b222c5347c896c0b5be) (Block `59333270`)
+- **`LiquidityVaultStandard`:** [`0xDD38265C1d66dCF067a24B1740895fDF5EA34f19`](https://testnet.snowscan.xyz/address/0xDD38265C1d66dCF067a24B1740895fDF5EA34f19)
+- **`LiquidityVaultGuarded`:** [`0x5883F591C2eD45DC82FF9a551B4A00939eb84e2B`](https://testnet.snowscan.xyz/address/0x5883F591C2eD45DC82FF9a551B4A00939eb84e2B)
+- **Liquidation Transaction Receipt:** [`0x234883ed75942a7cd7fa9b4c93ae9ffdbdc91e318d0492c2eb608bed890c5284`](https://testnet.snowscan.xyz/tx/0x234883ed75942a7cd7fa9b4c93ae9ffdbdc91e318d0492c2eb608bed890c5284) (Block `59348839`)
 
 ### 3.1 Initial Benchmark State
 $$\text{Initial Bad Debt} = 0.000000\text{ USDx}$$
@@ -81,7 +81,7 @@ Trader 1 (T1) opens a maximum 20x long position:
 - **Collateral:** $10,000.000000\text{ USDx}$
 - **Notional Size:** $200,000.000000\text{ USDx}$
 - **Entry Price:** $\$4,150.00$ ($415,000,000,000$)
-- **Opening Fee (6 bps):** $\$120.000000\text{ USDx}$
+- **Opening Fee (6 bps):** $\$120.000000\text{ USDx}$ ($96.00$ vault assets, $24.00$ insurance fund)
 
 ### 3.3 The Weekend Shock (Monday Reopen)
 A $-8.00\%$ gap shock is applied to both oracle feeds over the weekend:
@@ -93,27 +93,24 @@ Standard market has no deleveraging logic. T1 enters Monday carrying full $200,0
 1. **Gross Trader Loss:**
    $$\text{PnL} = 200,000 \times \frac{3,818 - 4,150}{4,150} = -16,000.000000\text{ USDx}$$
 2. **Accrued Funding:**
-   $$\text{FundingPaid} = 1,487.219444\text{ USDx}$$
+   $$\text{FundingPaid} = 1,487.256111\text{ USDx}$$
 3. **Trader Equity at Liquidation:**
-   $$\text{Equity} = 10,000.000000 - 16,000.000000 - 1,487.219444 = -7,487.219444\text{ USDx}$$
-4. **Loss Beyond Collateral (Trader Deficit):**
-   $$\text{Loss Beyond Collateral} = 7,487.219444\text{ USDx} \approx \mathbf{7,487.22\text{ USDx}}$$
-5. **Liquidation Penalties:**
-   - $\text{KeeperReward} = 50\text{ bps} \times 200,000 = 1,000.000000\text{ USDx}$
-   - $\text{InsurancePenalty} = 50\text{ bps} \times 200,000 = 1,000.000000\text{ USDx}$
-6. **Total Liquidation Shortfall:**
-   $$\text{Shortfall} = 7,487.219444 + 1,000.000000 + 1,000.000000 = 9,487.219444\text{ USDx} \approx \mathbf{9,487.22\text{ USDx}}$$
-7. **Insurance Fund Absorption:**
-   The Standard Insurance Fund had accumulated $40.800000\text{ USDx}$ in fees. It pays out its entire balance:
-   $$\text{PaidByInsurance} = 40.800000\text{ USDx}$$
-8. **LP Loss After Insurance Fund (Vault Bad Debt):**
-   $$\text{LP Loss After Insurance Fund} = 9,487.219444 - 40.800000 = \mathbf{9,446.419444\text{ USDx}} \approx \mathbf{9,446.42\text{ USDx}}$$
-9. **Final On-Chain State:**
-   - Contract call `badDebtTotal()`: `9446419444` ($9,446.42\text{ USDx}$).
-   - Reconciled to the exact single raw unit from on-chain event `ShortfallCovered(9487219444, 40800000, 9446419444)`.
+   $$\text{Equity} = 10,000.000000 - 16,000.000000 - 1,487.256111 = -7,487.256111\text{ USDx}$$
+4. **Headline Metric: Loss Beyond Collateral (Negative Equity):**
+   $$\text{Trader Deficit} = \sum \max(0, -\text{Equity}) = \mathbf{7,487.256111\text{ USDx}} \approx \mathbf{7,487.26\text{ USDx}}$$
+   - **Price-driven deficit:** $\$16,000.00 - \$10,000.00 = \mathbf{6,000.00\text{ USDx}}$
+   - **Funding-driven deficit:** $\mathbf{1,487.26\text{ USDx}}$
+   *(Exact match to live contract call `badDebtTotal()`: `7487256111`).*
+5. **Separate Keeper & Insurance Flows:**
+   - $\text{KeeperReward} = 50\text{ bps} \times 200,000 = 1,000.000000\text{ USDx}$ paid directly from vault reserves to liquidator.
+   - Absorbed by Insurance Fund: $\$40.800000\text{ USDx}$ (entire balance).
+   - Absorbed by LP Vault Assets: $\$959.200000\text{ USDx}$.
+6. **Exact Two-Sided Invariant Verification:**
+   - `balanceOf(PerpMarketStandard) == 14,000.000000 USDx` ($= \text{T2 Collateral } 8,000 + \text{T3 Collateral } 6,000$). **Zero stranded tokens!**
+   - `balanceOf(StandardVault) == 509,204.000000 USDx` ($= \text{vaultAssets } 509,204 + \text{insuranceFund } 0$). **Exact reserve conservation!**
 
 ### 3.5 Outcome on Nyxor Guarded Market
-In the final 10 minutes of Friday trading (PRE_CLOSE window at T-7.5m), the Nyxor risk engine called `deleverageToCap(t1)` at the fair open-market price ($\$4,150.00$):
+In the final 10 minutes of Friday trading (PRE_CLOSE window at T-7.5m), the Nyxor risk engine called `deleverageToCap` for all positions above the 5.00x closed-market cap (T1, T2, and T3) at the fair open-market price ($\$4,150.00$):
 1. **Leverage Cut:** Reduced from $20.00\text{x}$ down to the closed-market cap of $5.00\text{x}$ ($500$).
 2. **Deleveraged Notional:** Reduced to $50,000.000000\text{ USDx}$.
 3. **Collateral Retained:** $\$10,000.000000\text{ USDx}$.
@@ -134,15 +131,13 @@ In the final 10 minutes of Friday trading (PRE_CLOSE window at T-7.5m), the Nyxo
   - Trader 1: $20\text{x}$ Long ($10,000\text{ margin} \to 200,000\text{ notional}$)
   - Trader 2: $10\text{x}$ Long ($8,000\text{ margin} \to 80,000\text{ notional}$)
   - Trader 3: $10\text{x}$ Short ($6,000\text{ margin} \to 60,000\text{ notional}$)
-- **Foundry Invariant & Unit Test Suite (`WeekendGapScenario.t.sol`):** Evaluates **5 reference traders plus rejected trader T6** across boundary conditions (open boundary, ramp midpoint, gap shocks up to $-25\%$).
+- **Foundry Invariant & Unit Test Suite (`WeekendGapScenario.t.sol`):** Evaluates **5 reference traders plus rejected trader T6**, two-sided exact token conservation invariants, and short-side stress testing (+8% gap against 20x short).
 
 ---
 
-## 5. Historical Context: Superseded Deployment
+## 5. Historical Context: Superseded Deployments
 
 *(Marked as superseded per audit — retained for audit trail only)*:
-- Earlier deployment `0x4c38297282959b86482b10d59210c3f2df84B659` accumulated bad debt across two separate liquidations:
-  1. Block `59330044` (`0xe6f38ed...`): Liquidated deployer position ($9,326.00\text{ USDx}$).
-  2. Block `59332558` (`0xed882a5...`): Liquidated T1 position ($6,961.02\text{ USDx}$).
-  Total cumulative bad debt was $16,287.02\text{ USDx}$.
-- The current clean benchmark deployment described in Section 3 was deployed fresh and executed in a single atomic pass from zero.
+1. `0x4c38297282959b86482b10d59210c3f2df84B659`: Accumulated bad debt across multiple script iterations ($16,287.02\text{ USDx}$).
+2. `0x7f758330d60bd3B51E94B2582e4c05DFAbE765F8`: Old token-transfer accounting where deficit tokens were stranded in `PerpMarket` ($9,446.42\text{ USDx}$ bad debt).
+3. **Current Active Benchmark Deployment (`0xDD38265C1d66dCF067a24B1740895fDF5EA34f19`):** Deployed fresh via `DeployDemo`, executed in a single atomic pass, with exact two-sided balance invariants and `badDebtTotal` defined strictly as negative equity ($7,487.26\text{ USDx}$).
