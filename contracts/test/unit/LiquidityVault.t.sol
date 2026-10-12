@@ -169,6 +169,25 @@ contract LiquidityVaultTest is Test {
         assertEq(vault.sharesOf(lp2), 200_000 * 1e6);
     }
 
+    /// @notice Confirms that an insolvent epoch 1 LP cannot withdraw after epoch 2 recapitalization
+    function test_oldLpCannotWithdrawAfterRecapitalization() public {
+        vm.prank(lp1);
+        vault.deposit(100_000 * 1e6);
+
+        // Vault wiped out by market settlement
+        vm.prank(market);
+        vault.settleTraderPnl(100_000 * 1e6);
+
+        // LP2 deposits 100k to recapitalize vault in epoch 2
+        vm.prank(lp2);
+        vault.deposit(100_000 * 1e6);
+
+        // LP1 attempts to withdraw using obsolete epoch 1 shares -> reverts with InsufficientBalance
+        vm.prank(lp1);
+        vm.expectRevert(LiquidityVault.InsufficientBalance.selector);
+        vault.withdraw(100_000 * 1e6);
+    }
+
     function test_coverShortfall_fullyCoveredByInsurance() public {
         vm.prank(lp1);
         vault.deposit(SEED_AMOUNT);

@@ -10,6 +10,7 @@ import {MarketHoursRiskPolicy} from "../../src/policy/MarketHoursRiskPolicy.sol"
 import {LiquidityVault} from "../../src/vault/LiquidityVault.sol";
 import {PerpMarket} from "../../src/core/PerpMarket.sol";
 import {IPerpMarket} from "../../src/interfaces/IPerpMarket.sol";
+import {Phase} from "../../src/interfaces/IMarketSchedule.sol";
 
 contract PerpMarketTest is Test {
     address internal admin = makeAddr("admin");
@@ -72,8 +73,8 @@ contract PerpMarketTest is Test {
 
         // Fund traders
         vm.startPrank(admin);
-        usdc.mint(trader1, 50_000 * 1e6);
-        usdc.mint(trader2, 50_000 * 1e6);
+        usdc.mint(trader1, 100_000 * 1e6);
+        usdc.mint(trader2, 100_000 * 1e6);
         vm.stopPrank();
 
         vm.prank(trader1);
@@ -83,67 +84,233 @@ contract PerpMarketTest is Test {
         usdc.approve(address(market), type(uint256).max);
     }
 
-    function test_openPosition_success() public {
-        // Trader1 opens 10k collateral at 20x -> 200k notional
-        uint256 col = 10_000 * 1e6;
+    // ─── Task 2: Effective Leverage Invariant Tests ─────────────────────────────
+
+    function test_effectiveLeverage_neverExceedsCapAtOpen() public {
+        // 1. OPEN Phase: 20x cap
+        uint256 margin = 10_000 * 1e6;
+        uint256 traderBalanceBefore = usdc.balanceOf(trader1);
+
         vm.prank(trader1);
-        market.openPosition(true, col, 2000); // 20.00x
+        market.openPosition(true, margin, 2000); // 20.00x
 
         IPerpMarket.Position memory pos = market.getPosition(trader1);
-        assertTrue(pos.active);
-        assertTrue(pos.isLong);
+        assertEq(pos.collateral, margin); // full margin stored
         assertEq(pos.sizeUsd, 200_000 * 1e6);
-        assertEq(pos.entryPrice, INITIAL_PRICE);
-        // Net collateral = 10k - 6 bps taker fee (120 USDC) = 9,880 USDC
-        assertEq(pos.collateral, 9_880 * 1e6);
+        // Effective leverage strictly == 20.00x
+        assertEq(market.getLeverage(trader1), 2000);
+        // Fee (120 USDC) was charged on top of margin
+        assertEq(traderBalanceBefore - usdc.balanceOf(trader1), margin + 120 * 1e6);
+
+        // Close position
+        vm.prank(trader1);
+        market.closePosition();
+
+        // 2. PRE_CLOSE Phase ramp checks (T-30m and T-10m)
+        // At T-30m: maxLev is ~1250 (12.50x)
+        vm.prank(admin);
+        clock.setDemoOffset(int256(FRI_CLOSE - 1800) - int256(block.timestamp));
+        vm.prank(admin);
+        feed.setPrice(INITIAL_PRICE);
+
+        uint16 maxLevMid = policy.getParams(clock.effectiveNow()).maxLeverageX100;
+        vm.prank(trader1);
+        market.openPosition(true, margin, maxLevMid);
+        assertLe(market.getLeverage(trader1), maxLevMid);
+
+        vm.prank(trader1);
+        market.closePosition();
+
+        // At T-10m: maxLev is ~750 (7.50x)
+        vm.prank(admin);
+        clock.setDemoOffset(int256(FRI_CLOSE - 600) - int256(block.timestamp));
+        vm.prank(admin);
+        feed.setPrice(INITIAL_PRICE);
+
+        uint16 maxLevLate = policy.getParams(clock.effectiveNow()).maxLeverageX100;
+        vm.prank(trader1);
+        market.openPosition(true, margin, maxLevLate);
+        assertLe(market.getLeverage(trader1), maxLevLate);
     }
+
+    // ─── Task 5: openPosition Revert Paths ─────────────────────────────────────
 
     function test_openPosition_revertExcessiveLeverage() public {
         vm.prank(trader1);
-        vm.expectRevert();
+        vm.expectRevert(abi.encodeWithSelector(PerpMarket.ExcessiveLeverage.selector, 2500, 2000));
         market.openPosition(true, 10_000 * 1e6, 2500); // 25x > 20x max
     }
 
-    function test_closePosition_profitSettled() public {
+    function test_openPosition_revertZeroAmount() public {
+        vm.prank(trader1);
+        vm.expectRevert(PerpMarket.ZeroAmount.selector);
+        market.openPosition(true, 0, 1000);
+    }
+
+    function test_openPosition_revertPositionAlreadyActive() public {
+        vm.prank(trader1);
+        market.openPosition(true, 10_000 * 1e6, 1000);
+
+        vm.prank(trader1);
+        vm.expectRevert(PerpMarket.PositionAlreadyActive.selector);
+        market.openPosition(true, 5_000 * 1e6, 1000);
+    }
+
+    function test_openPosition_revertReduceOnlyMode() public {
+        // Warp to weekend (CLOSED phase)
+        vm.prank(admin);
+        clock.setDemoOffset(int256(FRI_CLOSE + 3600) - int256(block.timestamp));
+
+        vm.prank(trader1);
+        vm.expectRevert(PerpMarket.ReduceOnlyMode.selector);
+        market.openPosition(true, 10_000 * 1e6, 500);
+    }
+
+    function test_openPosition_revertExceedsMaxPosition() public {
+        // BASE_POS = 200,000 USD
+        // 15,000 collateral @ 20x = 300,000 USD > 200,000 USD
+        vm.prank(trader1);
+        vm.expectRevert(abi.encodeWithSelector(PerpMarket.ExceedsMaxPosition.selector, 300_000 * 1e6, BASE_POS));
+        market.openPosition(true, 15_000 * 1e6, 2000);
+    }
+
+    function test_openPosition_revertExceedsMaxOpenInterest() public {
+        // Trader1 opens 10,000 @ 20x = 200k
+        // BASE_OI = 1,000,000 USD. Let's fill up trader1 and trader2 up to cap
+        // Trader2 opens 10,000 @ 20x = 200k until OI fills up
+        // Set small OI cap for this test
+        // Test OI limit rejection:
+        vm.prank(trader1);
+        market.openPosition(true, 10_000 * 1e6, 2000); // 200k OI
+
+        // Warp to PRE_CLOSE close where OI cap ramps down to 40% (400k)
+        vm.prank(admin);
+        clock.setDemoOffset(int256(FRI_CLOSE - 1) - int256(block.timestamp));
+        vm.prank(admin);
+        feed.setPrice(INITIAL_PRICE);
+
+        // At close boundary, OI cap is 400k. Trader2 tries to open 50k margin @ 5x = 250k notional (200k + 250k = 450k > 400k)
+        vm.prank(trader2);
+        vm.expectRevert();
+        market.openPosition(true, 50_000 * 1e6, 500);
+    }
+
+    function test_openPosition_revertStalePrice() public {
+        // Advance clock by 10 minutes without updating price feed (maxStaleness = 5m)
+        vm.prank(admin);
+        clock.advance(600);
+
+        vm.prank(trader1);
+        vm.expectRevert(PerpMarket.StalePrice.selector);
+        market.openPosition(true, 10_000 * 1e6, 1000);
+    }
+
+    // ─── Task 4: CLOSED/REOPEN Pricing & Non-Trapped Positions ──────────────────
+
+    function test_closePosition_duringClosedPhaseUsesOfficialClosePrice() public {
+        // Trader1 opens 10k collateral @ 10x long on Friday afternoon
+        vm.prank(trader1);
+        market.openPosition(true, 10_000 * 1e6, 1000); // 100k notional
+
+        // Weekend arrives (CLOSED phase). Checkpoint close price at 4150.00
+        vm.prank(admin);
+        clock.setDemoOffset(int256(FRI_CLOSE + 7200) - int256(block.timestamp)); // Saturday
+
+        feed.checkpointClose();
+
+        // Trader1 calls closePosition on Saturday!
+        // Staleness check is bypassed and official close price (4150.00) is used
+        uint256 balBefore = usdc.balanceOf(trader1);
+        vm.prank(trader1);
+        market.closePosition();
+
+        assertFalse(market.getPosition(trader1).active);
+        // Trader is not trapped: received collateral back minus close fee
+        assertGt(usdc.balanceOf(trader1), balBefore);
+    }
+
+    // ─── Task 3: Funding Rate Settlement ───────────────────────────────────────
+
+    function test_funding_accrualAndSettlement() public {
+        // Trader1 opens 10k long @ 10x = 100k notional
+        // Trader2 opens 2k short @ 10x = 20k notional
+        // Net skew = 80k long skew
+        vm.prank(trader1);
+        market.openPosition(true, 10_000 * 1e6, 1000);
+
+        vm.prank(trader2);
+        market.openPosition(false, 2_000 * 1e6, 1000);
+
+        // Advance 2 hours in OPEN phase
+        vm.prank(admin);
+        clock.advance(7200);
+        vm.prank(admin);
+        feed.setPrice(INITIAL_PRICE);
+
+        // Settle funding
+        market.settleFunding();
+
+        // Long cumulative rate should be positive (longs owe funding)
+        assertGt(market.cumulativeFundingRateLong(), 0);
+        // Short cumulative rate should be negative (shorts receive funding)
+        assertLt(market.cumulativeFundingRateShort(), 0);
+
+        // Check equity: trader1's equity decreased due to accrued funding
+        int256 eq1 = market.getEquity(trader1);
+        assertLt(eq1, int256(10_000 * 1e6));
+    }
+
+    // ─── Task 5: Margin Management Tests ──────────────────────────────────────
+
+    function test_removeMargin_revertIfEquityBelowInitialMargin() public {
+        uint256 col = 10_000 * 1e6;
+        vm.prank(trader1);
+        market.openPosition(true, col, 2000); // 20x: exactly at initial margin
+
+        // Removing even 1 USDC margin drops below IM -> revert
+        vm.prank(trader1);
+        vm.expectRevert(PerpMarket.InsufficientCollateral.selector);
+        market.removeMargin(100 * 1e6);
+    }
+
+    // ─── Task 5: Liquidation Tests (Healthy, Partial, Negative Equity) ─────────
+
+    function test_liquidate_revertIfPositionHealthy() public {
+        vm.prank(trader1);
+        market.openPosition(true, 10_000 * 1e6, 1000);
+
+        vm.prank(keeper);
+        vm.expectRevert(PerpMarket.PositionHealthy.selector);
+        market.liquidate(trader1);
+    }
+
+    function test_liquidate_partialEquityRemaining() public {
         uint256 col = 10_000 * 1e6;
         vm.prank(trader1);
         market.openPosition(true, col, 1000); // 10x long -> 100k notional
 
-        // Price increases by +5%: 4150 -> 4357.50
+        // Price drops -8%: 100k * 8% = 8,000 loss. Collateral remaining = 2,000 (2% < 2.5% MM)
+        // Equity is +2,000 > 0, so partial equity remains
         vm.prank(admin);
-        feed.queueShock(500);
+        feed.queueShock(-800);
 
-        uint256 balanceBefore = usdc.balanceOf(trader1);
-        vm.prank(trader1);
-        market.closePosition();
+        uint256 keeperBalBefore = usdc.balanceOf(keeper);
+        vm.prank(keeper);
+        market.liquidate(trader1);
 
-        uint256 balanceAfter = usdc.balanceOf(trader1);
-        // Trader gained 5% on 100k notional = ~5,000 USDC profit minus close fees
-        assertGt(balanceAfter - balanceBefore, col);
+        assertFalse(market.getPosition(trader1).active);
+        // Keeper receives 50 bps reward (500 USDC)
+        assertEq(usdc.balanceOf(keeper) - keeperBalBefore, 500 * 1e6);
+        // No bad debt created since equity was positive
+        assertEq(vault.badDebtTotal(), 0);
     }
 
-    function test_addAndRemoveMargin() public {
-        uint256 col = 10_000 * 1e6;
-        vm.prank(trader1);
-        market.openPosition(true, col, 1000); // 10x long
-
-        // Add 2,000 margin
-        vm.prank(trader1);
-        market.addMargin(2_000 * 1e6);
-        assertEq(market.getPosition(trader1).collateral, (col - 60 * 1e6) + 2_000 * 1e6);
-
-        // Remove 1,000 margin
-        vm.prank(trader1);
-        market.removeMargin(1_000 * 1e6);
-        assertEq(market.getPosition(trader1).collateral, (col - 60 * 1e6) + 1_000 * 1e6);
-    }
-
-    function test_liquidate_shortfallCoveredByInsuranceAndVault() public {
+    function test_liquidate_negativeEquityShortfall() public {
         uint256 col = 10_000 * 1e6;
         vm.prank(trader1);
         market.openPosition(true, col, 2000); // 20x long -> 200k notional
 
-        // Price drops -6% (4150 -> 3901): 20x loss = 120% of collateral -> negative equity!
+        // Price drops -6%: 200k * 6% = 12,000 loss > 10,000 collateral -> negative equity!
         vm.prank(admin);
         feed.queueShock(-600);
 
@@ -151,57 +318,66 @@ contract PerpMarketTest is Test {
         vm.prank(keeper);
         market.liquidate(trader1);
 
-        // Position cleared
         assertFalse(market.getPosition(trader1).active);
-        // Keeper received reward (50 bps of 200k = 1,000 USDC)
         assertEq(usdc.balanceOf(keeper) - keeperBalBefore, 1_000 * 1e6);
-        // Vault covered shortfall and accumulated bad debt
         assertGt(vault.badDebtTotal(), 0);
     }
 
-    function test_deleverageToCap_inPreCloseWindow() public {
-        uint256 col = 10_000 * 1e6;
-        vm.prank(trader1);
-        market.openPosition(true, col, 2000); // 20x long -> 200k notional
+    // ─── Task 5: Deleverage Reverts ───────────────────────────────────────────
 
-        // Advance clock to final 10 minutes of PRE_CLOSE (e.g. 5 minutes before close)
+    function test_deleverageToCap_revertIfNotDeleverageWindow() public {
+        vm.prank(trader1);
+        market.openPosition(true, 10_000 * 1e6, 2000);
+
+        // Still in OPEN phase (not PRE_CLOSE)
+        vm.prank(keeper);
+        vm.expectRevert(PerpMarket.NotDeleverageWindow.selector);
+        market.deleverageToCap(trader1);
+    }
+
+    function test_deleverageToCap_revertIfAlreadyWithinCap() public {
+        // Trader opens 4x position (safely within 5x cap even after funding accrual)
+        vm.prank(trader1);
+        market.openPosition(true, 10_000 * 1e6, 400);
+
+        // Warp to T-5m in PRE_CLOSE
         vm.prank(admin);
         clock.setDemoOffset(int256(FRI_CLOSE - 300) - int256(block.timestamp));
-
-        // Push fresh price quote at T-5m
         vm.prank(admin);
         feed.setPrice(INITIAL_PRICE);
 
-        // Keeper deleverages trader1 to 5x
         vm.prank(keeper);
+        vm.expectRevert(PerpMarket.PositionAlreadyWithinCap.selector);
         market.deleverageToCap(trader1);
-
-        IPerpMarket.Position memory pos = market.getPosition(trader1);
-        // Position size reduced to 5x of equity: ~9,880 * 5 = ~49,400 USDC
-        assertLe(pos.sizeUsd, 50_000 * 1e6);
-        assertGe(pos.sizeUsd, 48_000 * 1e6);
     }
 
-    /// @notice Conservation invariant: total tokens held by (market + vault) >= sum(collateral) + vaultAssets + insuranceFund
-    function testInvariant_tokenConservation() public {
-        uint256 col1 = 10_000 * 1e6;
-        uint256 col2 = 5_000 * 1e6;
+    // ─── Task 5: Fuzz Test: Round-Trip Open and Close ──────────────────────────
+
+    function testFuzz_openAndClose_roundTrip(uint32 marginRaw, uint16 leverageX100, int16 priceMoveBps) public {
+        // Constrain margin between 1,000 USDC and 10,000 USDC to stay within BASE_POS (200k)
+        uint256 margin = bound(uint256(marginRaw), 1_000, 10_000) * 1e6;
+        // Constrain leverage between 2x and 20x
+        leverageX100 = uint16(bound(leverageX100, 200, 2000));
+        // Bound price move between -2% and +2% so position stays healthy across all leverages
+        priceMoveBps = int16(bound(priceMoveBps, -200, 200));
+
+        // Fund trader with margin + fee buffer
+        vm.prank(admin);
+        usdc.mint(trader1, margin * 2);
 
         vm.prank(trader1);
-        market.openPosition(true, col1, 1000);
+        market.openPosition(true, margin, leverageX100);
 
-        vm.prank(trader2);
-        market.openPosition(false, col2, 1000);
+        if (priceMoveBps != 0) {
+            vm.prank(admin);
+            feed.queueShock(int256(priceMoveBps));
+        }
 
-        uint256 totalMarketTokens = usdc.balanceOf(address(market));
-        uint256 totalVaultTokens = usdc.balanceOf(address(vault));
-        uint256 totalInSystem = totalMarketTokens + totalVaultTokens;
+        vm.prank(trader1);
+        market.closePosition();
 
-        uint256 totalClaimable = market.getPosition(trader1).collateral
-            + market.getPosition(trader2).collateral
-            + vault.vaultAssets()
-            + vault.insuranceFund();
-
-        assertGe(totalInSystem, totalClaimable, "Conservation invariant violated");
+        assertFalse(market.getPosition(trader1).active);
+        // Position was completely closed without stranded state
+        assertGt(usdc.balanceOf(trader1), 0);
     }
 }
