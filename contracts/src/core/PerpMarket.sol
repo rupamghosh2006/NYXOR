@@ -37,7 +37,16 @@ contract PerpMarket is IPerpMarket, ReentrancyGuard, AccessControl {
     uint16 public constant INSURANCE_FEE_SHARE_BPS = 2000;   // 20% of taker fee to insurance
     uint256 public constant DELEVERAGE_WINDOW = 600;         // Final 10 minutes of PRE_CLOSE
 
+    // Funding constants per AGENTS.md §8.4
+    int256 public constant K_BPS = 10;                       // Slope constant k
+    int256 public constant MAX_FUNDING_RATE_PER_HOUR_BPS = 25;// Clamp at ±0.25% per hour
+
     uint256 public maxStaleness = 300; // 5 minutes max price staleness
+
+    // Funding state (1e18 precision cumulative rates)
+    int256 public cumulativeFundingRateLong;
+    int256 public cumulativeFundingRateShort;
+    uint256 public lastFundingSettledAt;
 
     // Positions mapping
     mapping(address => Position) public positions;
@@ -53,8 +62,8 @@ contract PerpMarket is IPerpMarket, ReentrancyGuard, AccessControl {
     error ReduceOnlyMode();
     error ExcessiveLeverage(uint16 requested, uint16 maxAllowed);
     error InsufficientCollateral();
-    error ExceedsMaxOpenInterest();
-    error ExceedsMaxPosition();
+    error ExceedsMaxOpenInterest(uint256 requested, uint256 maxAllowed);
+    error ExceedsMaxPosition(uint256 requested, uint256 maxAllowed);
     error PositionHealthy();
     error NotDeleverageWindow();
     error PositionAlreadyWithinCap();
@@ -79,6 +88,7 @@ contract PerpMarket is IPerpMarket, ReentrancyGuard, AccessControl {
         clock = IMarketClock(clock_);
         schedule = IMarketSchedule(schedule_);
         vault = LiquidityVault(vault_);
+        lastFundingSettledAt = IMarketClock(clock_).effectiveNow();
     }
 
     function setMaxStaleness(uint256 staleness) external onlyRole(ADMIN_ROLE) {
@@ -86,70 +96,79 @@ contract PerpMarket is IPerpMarket, ReentrancyGuard, AccessControl {
     }
 
     /// @inheritdoc IPerpMarket
-    function openPosition(bool isLong, uint256 collateral, uint16 leverageX100) external override nonReentrant {
+    /// @dev Charges taker fee on top of margin so effective leverage strictly matches leverageX100
+    ///      and never exceeds the policy cap.
+    function openPosition(bool isLong, uint256 margin, uint16 leverageX100) external override nonReentrant {
         if (positions[msg.sender].active) revert PositionAlreadyActive();
-        if (collateral == 0) revert ZeroAmount();
+        if (margin == 0) revert ZeroAmount();
+
+        settleFunding();
 
         uint256 currentTs = clock.effectiveNow();
-        (uint256 price1e8, uint256 priceTs) = priceFeed.latestPrice();
-        if (currentTs > priceTs && (currentTs - priceTs) > maxStaleness) revert StalePrice();
+        (Phase phase,,) = schedule.phaseAt(currentTs);
+        uint256 currentPrice = _getExecutionPrice(phase);
 
         RiskParams memory params = riskPolicy.getParams(currentTs);
         if (params.reduceOnly) revert ReduceOnlyMode();
         if (leverageX100 > params.maxLeverageX100) revert ExcessiveLeverage(leverageX100, params.maxLeverageX100);
 
-        // notional = collateral * leverageX100 / 100
-        uint256 sizeUsd = (collateral * leverageX100) / 100;
-        if (sizeUsd > params.maxPositionUsd) revert ExceedsMaxPosition();
+        // size = margin * leverageX100 / 100
+        uint256 sizeUsd = (margin * leverageX100) / 100;
+        if (sizeUsd > params.maxPositionUsd) revert ExceedsMaxPosition(sizeUsd, params.maxPositionUsd);
 
         if (isLong) {
-            if (totalOiLongUsd + sizeUsd > params.maxOpenInterestUsd) revert ExceedsMaxOpenInterest();
+            if (totalOiLongUsd + sizeUsd > params.maxOpenInterestUsd) {
+                revert ExceedsMaxOpenInterest(totalOiLongUsd + sizeUsd, params.maxOpenInterestUsd);
+            }
             totalOiLongUsd += sizeUsd;
         } else {
-            if (totalOiShortUsd + sizeUsd > params.maxOpenInterestUsd) revert ExceedsMaxOpenInterest();
+            if (totalOiShortUsd + sizeUsd > params.maxOpenInterestUsd) {
+                revert ExceedsMaxOpenInterest(totalOiShortUsd + sizeUsd, params.maxOpenInterestUsd);
+            }
             totalOiShortUsd += sizeUsd;
         }
 
-        // Taker fee on open: 6 bps of notional
+        // Taker fee on open charged on top of margin
         uint256 openFee = (sizeUsd * TAKER_FEE_BPS) / 10000;
-        if (openFee >= collateral) revert InsufficientCollateral();
-        uint256 netCollateral = collateral - openFee;
+        uint256 totalRequired = margin + openFee;
 
-        // Verify deposited collateral meets initial margin: collateral >= sizeUsd * initialMarginBps / 10000
-        if (collateral < (sizeUsd * params.initialMarginBps) / 10000) revert InsufficientCollateral();
-        // Verify net collateral after fee remains safely above maintenance margin
-        if (netCollateral < (sizeUsd * params.maintenanceMarginBps) / 10000) revert InsufficientCollateral();
+        // Transfer margin + fee from trader
+        collateralToken.safeTransferFrom(msg.sender, address(this), totalRequired);
 
-        // Transfer collateral from trader: collateral stays in this contract, fee is sent to vault
-        collateralToken.safeTransferFrom(msg.sender, address(this), collateral);
-
+        // Send open fee to vault
         collateralToken.forceApprove(address(vault), openFee);
         vault.receiveFee(openFee, INSURANCE_FEE_SHARE_BPS);
+
+        int256 initialFundingIndex = isLong ? cumulativeFundingRateLong : cumulativeFundingRateShort;
 
         positions[msg.sender] = Position({
             active: true,
             isLong: isLong,
             sizeUsd: sizeUsd,
-            collateral: netCollateral,
-            entryPrice: price1e8,
-            fundingIndexSnapshot: 0,
+            collateral: margin, // Full margin preserved in position
+            entryPrice: currentPrice,
+            fundingIndexSnapshot: initialFundingIndex,
             openedAt: currentTs
         });
 
         _syncVaultLockedExposure();
-        emit PositionOpened(msg.sender, isLong, sizeUsd, netCollateral, price1e8, leverageX100);
+        emit PositionOpened(msg.sender, isLong, sizeUsd, margin, currentPrice, leverageX100);
     }
 
     /// @inheritdoc IPerpMarket
+    /// @dev Closes position. In CLOSED phase, executes against lastOfficialClosePrice so traders are never trapped.
     function closePosition() external override nonReentrant {
         Position memory pos = positions[msg.sender];
         if (!pos.active) revert NoActivePosition();
 
-        uint256 currentTs = clock.effectiveNow();
-        (uint256 currentPrice, uint256 priceTs) = priceFeed.latestPrice();
-        if (currentTs > priceTs && (currentTs - priceTs) > maxStaleness) revert StalePrice();
+        settleFunding();
+
+        (Phase phase,,) = schedule.phaseAt(clock.effectiveNow());
+        uint256 currentPrice = _getExecutionPrice(phase);
 
         int256 pnl = _calculatePnl(pos.isLong, pos.sizeUsd, pos.entryPrice, currentPrice);
+        int256 fundingPaid = _calculateAccruedFunding(pos);
+
         uint256 closeFee = (pos.sizeUsd * TAKER_FEE_BPS) / 10000;
 
         if (pos.isLong) {
@@ -160,13 +179,13 @@ contract PerpMarket is IPerpMarket, ReentrancyGuard, AccessControl {
         delete positions[msg.sender];
         _syncVaultLockedExposure();
 
-        // Settle PnL with vault
-        if (pnl > 0) {
-            // Vault transfers profit to this contract
-            vault.settleTraderPnl(pnl);
-        } else if (pnl < 0) {
-            uint256 loss = uint256(-pnl);
-            // Cap loss to trader collateral
+        // Net PnL realized against the vault: trader profit/loss after funding
+        int256 netPnlToVault = pnl - fundingPaid;
+
+        if (netPnlToVault > 0) {
+            vault.settleTraderPnl(netPnlToVault);
+        } else if (netPnlToVault < 0) {
+            uint256 loss = uint256(-netPnlToVault);
             if (loss > pos.collateral) {
                 loss = pos.collateral;
             }
@@ -174,11 +193,10 @@ contract PerpMarket is IPerpMarket, ReentrancyGuard, AccessControl {
             vault.settleTraderPnl(-int256(loss));
         }
 
-        // Net payout to trader: collateral + pnl - closeFee
-        int256 netPayout = int256(pos.collateral) + pnl - int256(closeFee);
+        // Net payout to trader: collateral + pnl - fundingPaid - closeFee
+        int256 netPayout = int256(pos.collateral) + pnl - fundingPaid - int256(closeFee);
         uint256 payout = netPayout > 0 ? uint256(netPayout) : 0;
 
-        // Pay fee to vault
         if (closeFee > 0) {
             collateralToken.forceApprove(address(vault), closeFee);
             vault.receiveFee(closeFee, INSURANCE_FEE_SHARE_BPS);
@@ -209,15 +227,18 @@ contract PerpMarket is IPerpMarket, ReentrancyGuard, AccessControl {
         if (!pos.active) revert NoActivePosition();
         if (amount >= pos.collateral) revert InsufficientCollateral();
 
+        settleFunding();
+
         uint256 currentTs = clock.effectiveNow();
-        (uint256 currentPrice, uint256 priceTs) = priceFeed.latestPrice();
-        if (currentTs > priceTs && (currentTs - priceTs) > maxStaleness) revert StalePrice();
+        (Phase phase,,) = schedule.phaseAt(currentTs);
+        uint256 currentPrice = _getExecutionPrice(phase);
 
         RiskParams memory params = riskPolicy.getParams(currentTs);
         uint256 remainingCollateral = pos.collateral - amount;
 
         int256 pnl = _calculatePnl(pos.isLong, pos.sizeUsd, pos.entryPrice, currentPrice);
-        int256 equity = int256(remainingCollateral) + pnl;
+        int256 fundingPaid = _calculateAccruedFunding(pos);
+        int256 equity = int256(remainingCollateral) + pnl - fundingPaid;
         if (equity <= 0) revert InsufficientCollateral();
 
         // Must still satisfy IM at current policy params
@@ -230,16 +251,21 @@ contract PerpMarket is IPerpMarket, ReentrancyGuard, AccessControl {
     }
 
     /// @inheritdoc IPerpMarket
+    /// @dev Permissionless liquidation. In CLOSED phase, uses official close price against 6% MM.
     function liquidate(address trader) external override nonReentrant {
         Position memory pos = positions[trader];
         if (!pos.active) revert NoActivePosition();
 
+        settleFunding();
+
         uint256 currentTs = clock.effectiveNow();
-        (uint256 currentPrice,) = priceFeed.latestPrice();
+        (Phase phase,,) = schedule.phaseAt(currentTs);
+        uint256 currentPrice = _getExecutionPrice(phase);
 
         RiskParams memory params = riskPolicy.getParams(currentTs);
         int256 pnl = _calculatePnl(pos.isLong, pos.sizeUsd, pos.entryPrice, currentPrice);
-        int256 equity = int256(pos.collateral) + pnl;
+        int256 fundingPaid = _calculateAccruedFunding(pos);
+        int256 equity = int256(pos.collateral) + pnl - fundingPaid;
 
         uint256 mmUsd = (pos.sizeUsd * params.maintenanceMarginBps) / 10000;
         if (equity >= int256(mmUsd)) revert PositionHealthy();
@@ -286,14 +312,12 @@ contract PerpMarket is IPerpMarket, ReentrancyGuard, AccessControl {
                 collateralToken.forceApprove(address(vault), insuranceContrib);
                 vault.receiveInsuranceFundContribution(insuranceContrib);
 
-                // Send remaining collateral to vault to settle trader loss
                 uint256 traderLoss = pos.collateral > remainingEquity ? pos.collateral - remainingEquity : 0;
                 if (traderLoss > 0) {
                     collateralToken.forceApprove(address(vault), traderLoss);
                     vault.settleTraderPnl(-int256(traderLoss));
                 }
             } else {
-                // Equity does not fully cover penalty
                 uint256 shortfallDeficit = penalty - remainingEquity;
                 vault.coverShortfall(shortfallDeficit);
                 collateralToken.safeTransfer(msg.sender, keeperReward);
@@ -310,26 +334,33 @@ contract PerpMarket is IPerpMarket, ReentrancyGuard, AccessControl {
         if (!pos.active) revert NoActivePosition();
 
         uint256 currentTs = clock.effectiveNow();
-        (Phase phase, uint256 toClose,) = schedule.phaseAt(currentTs);
-        if (phase != Phase.PRE_CLOSE || toClose > DELEVERAGE_WINDOW) revert NotDeleverageWindow();
+        {
+            (Phase phase, uint256 toClose,) = schedule.phaseAt(currentTs);
+            if (phase != Phase.PRE_CLOSE || toClose > DELEVERAGE_WINDOW) revert NotDeleverageWindow();
+        }
 
-        (uint256 currentPrice, uint256 priceTs) = priceFeed.latestPrice();
-        if (currentTs > priceTs && (currentTs - priceTs) > maxStaleness) revert StalePrice();
+        settleFunding();
+
+        uint256 currentPrice;
+        {
+            (uint256 p, uint256 priceTs) = priceFeed.latestPrice();
+            if (currentTs > priceTs && (currentTs - priceTs) > maxStaleness) revert StalePrice();
+            currentPrice = p;
+        }
 
         RiskParams memory params = riskPolicy.getParams(currentTs);
         int256 pnl = _calculatePnl(pos.isLong, pos.sizeUsd, pos.entryPrice, currentPrice);
-        int256 equity = int256(pos.collateral) + pnl;
+        int256 fundingPaid = _calculateAccruedFunding(pos);
+        int256 equity = int256(pos.collateral) + pnl - fundingPaid;
         if (equity <= 0) revert InsufficientCollateral();
 
         uint256 currentLeverageX100 = (pos.sizeUsd * 100) / uint256(equity);
         if (currentLeverageX100 <= params.deleverageTargetX100) revert PositionAlreadyWithinCap();
 
         uint256 oldSizeUsd = pos.sizeUsd;
-        // targetSize = equity * deleverageTargetX100 / 100 (e.g. 5x of equity)
         uint256 targetSizeUsd = (uint256(equity) * params.deleverageTargetX100) / 100;
         uint256 reducedSizeUsd = oldSizeUsd - targetSizeUsd;
 
-        // Realize proportional PnL on reduced portion at the open-market price
         int256 reducedPnl = (pnl * int256(reducedSizeUsd)) / int256(oldSizeUsd);
         if (pos.isLong) {
             totalOiLongUsd -= reducedSizeUsd;
@@ -338,7 +369,13 @@ contract PerpMarket is IPerpMarket, ReentrancyGuard, AccessControl {
         }
 
         pos.sizeUsd = targetSizeUsd;
-        // Adjust collateral by realized portion: collateral += reducedPnl
+        _applyDeleverageSettle(pos, reducedPnl, fundingPaid);
+
+        _syncVaultLockedExposure();
+        emit Deleveraged(trader, oldSizeUsd, targetSizeUsd, params.deleverageTargetX100);
+    }
+
+    function _applyDeleverageSettle(Position storage pos, int256 reducedPnl, int256 fundingPaid) internal {
         if (reducedPnl > 0) {
             vault.settleTraderPnl(reducedPnl);
             pos.collateral += uint256(reducedPnl);
@@ -349,8 +386,58 @@ contract PerpMarket is IPerpMarket, ReentrancyGuard, AccessControl {
             vault.settleTraderPnl(-int256(loss));
         }
 
-        _syncVaultLockedExposure();
-        emit Deleveraged(trader, oldSizeUsd, targetSizeUsd, params.deleverageTargetX100);
+        if (fundingPaid > 0) {
+            uint256 fp = uint256(fundingPaid);
+            pos.collateral = pos.collateral > fp ? pos.collateral - fp : 0;
+            collateralToken.forceApprove(address(vault), fp);
+            vault.settleTraderPnl(-int256(fp));
+        } else if (fundingPaid < 0) {
+            uint256 fg = uint256(-fundingPaid);
+            vault.settleTraderPnl(int256(fg));
+            pos.collateral += fg;
+        }
+
+        pos.fundingIndexSnapshot = pos.isLong ? cumulativeFundingRateLong : cumulativeFundingRateShort;
+    }
+
+    /// @inheritdoc IPerpMarket
+    /// @dev Updates cumulative funding rates according to market skew and policy fundingMultiplier
+    function settleFunding() public override {
+        uint256 currentTs = clock.effectiveNow();
+        if (currentTs <= lastFundingSettledAt) return;
+
+        uint256 elapsed = currentTs - lastFundingSettledAt;
+        lastFundingSettledAt = currentTs;
+
+        RiskParams memory params = riskPolicy.getParams(currentTs);
+        if (params.maxOpenInterestUsd == 0) return;
+
+        int256 netSkewUsd = int256(totalOiLongUsd) - int256(totalOiShortUsd);
+        // skew in bps: (netSkew * 10000) / maxOI
+        int256 skewBps = (netSkewUsd * 10000) / int256(params.maxOpenInterestUsd);
+
+        // raw rate per hour in 1e18: (skewBps * K_BPS * 1e18) / 100_000_000
+        int256 rawRatePerHour1e18 = (skewBps * K_BPS * 1e18) / 100_000_000;
+
+        // clamp raw rate to ±MAX_FUNDING_RATE_PER_HOUR_BPS (25 bps / hr)
+        int256 maxRate1e18 = (MAX_FUNDING_RATE_PER_HOUR_BPS * 1e18) / 10000;
+        if (rawRatePerHour1e18 > maxRate1e18) {
+            rawRatePerHour1e18 = maxRate1e18;
+        } else if (rawRatePerHour1e18 < -maxRate1e18) {
+            rawRatePerHour1e18 = -maxRate1e18;
+        }
+
+        // rate * fundingMultiplier
+        int256 ratePerHour1e18 = (rawRatePerHour1e18 * int256(uint256(params.fundingMultiplierBps))) / 10000;
+
+        // Convert to 1e18 rate delta for elapsed seconds: (ratePerHour1e18 * elapsed) / 3600
+        int256 rateDelta1e18 = (ratePerHour1e18 * int256(elapsed)) / 3600;
+
+        cumulativeFundingRateLong += rateDelta1e18;
+        cumulativeFundingRateShort -= rateDelta1e18;
+
+        int256 ratePerHourBps = (ratePerHour1e18 * 10000) / 1e18;
+        emit FundingSettled(ratePerHourBps, cumulativeFundingRateLong);
     }
 
     // ─── Views ─────────────────────────────────────────────────────────────────
@@ -362,15 +449,21 @@ contract PerpMarket is IPerpMarket, ReentrancyGuard, AccessControl {
     function getEquity(address trader) external view override returns (int256) {
         Position memory pos = positions[trader];
         if (!pos.active) return 0;
-        (uint256 currentPrice,) = priceFeed.latestPrice();
-        return int256(pos.collateral) + _calculatePnl(pos.isLong, pos.sizeUsd, pos.entryPrice, currentPrice);
+        (Phase phase,,) = schedule.phaseAt(clock.effectiveNow());
+        uint256 currentPrice = _getExecutionPrice(phase);
+        int256 pnl = _calculatePnl(pos.isLong, pos.sizeUsd, pos.entryPrice, currentPrice);
+        int256 fundingPaid = _calculateAccruedFunding(pos);
+        return int256(pos.collateral) + pnl - fundingPaid;
     }
 
     function getLeverage(address trader) external view override returns (uint16) {
         Position memory pos = positions[trader];
         if (!pos.active) return 0;
-        (uint256 currentPrice,) = priceFeed.latestPrice();
-        int256 equity = int256(pos.collateral) + _calculatePnl(pos.isLong, pos.sizeUsd, pos.entryPrice, currentPrice);
+        (Phase phase,,) = schedule.phaseAt(clock.effectiveNow());
+        uint256 currentPrice = _getExecutionPrice(phase);
+        int256 pnl = _calculatePnl(pos.isLong, pos.sizeUsd, pos.entryPrice, currentPrice);
+        int256 fundingPaid = _calculateAccruedFunding(pos);
+        int256 equity = int256(pos.collateral) + pnl - fundingPaid;
         if (equity <= 0) return type(uint16).max;
         return uint16((pos.sizeUsd * 100) / uint256(equity));
     }
@@ -382,13 +475,11 @@ contract PerpMarket is IPerpMarket, ReentrancyGuard, AccessControl {
         uint256 mmUsd = (pos.sizeUsd * params.maintenanceMarginBps) / 10000;
 
         if (pos.isLong) {
-            // Long liq: P0 * (1 - (C - MM) / N)
             if (pos.collateral <= mmUsd) return pos.entryPrice;
             uint256 buffer = pos.collateral - mmUsd;
             uint256 priceDrop = (pos.entryPrice * buffer) / pos.sizeUsd;
             return pos.entryPrice > priceDrop ? pos.entryPrice - priceDrop : 0;
         } else {
-            // Short liq: P0 * (1 + (C - MM) / N)
             if (pos.collateral <= mmUsd) return pos.entryPrice;
             uint256 buffer = pos.collateral - mmUsd;
             uint256 priceRise = (pos.entryPrice * buffer) / pos.sizeUsd;
@@ -397,6 +488,19 @@ contract PerpMarket is IPerpMarket, ReentrancyGuard, AccessControl {
     }
 
     // ─── Internal helpers ─────────────────────────────────────────────────────
+
+    /// @dev Retrieves valid execution price. During CLOSED, uses frozen lastOfficialClosePrice.
+    function _getExecutionPrice(Phase phase) internal view returns (uint256 price) {
+        if (phase == Phase.CLOSED) {
+            price = priceFeed.lastOfficialClosePrice();
+            if (price == 0) revert StalePrice();
+        } else {
+            uint256 currentTs = clock.effectiveNow();
+            (uint256 latest, uint256 priceTs) = priceFeed.latestPrice();
+            if (currentTs > priceTs && (currentTs - priceTs) > maxStaleness) revert StalePrice();
+            price = latest;
+        }
+    }
 
     function _calculatePnl(bool isLong, uint256 sizeUsd, uint256 entryPrice, uint256 currentPrice) internal pure returns (int256) {
         if (isLong) {
@@ -412,6 +516,11 @@ contract PerpMarket is IPerpMarket, ReentrancyGuard, AccessControl {
                 return -int256((sizeUsd * (currentPrice - entryPrice)) / entryPrice);
             }
         }
+    }
+
+    function _calculateAccruedFunding(Position memory pos) internal view returns (int256) {
+        int256 currentIndex = pos.isLong ? cumulativeFundingRateLong : cumulativeFundingRateShort;
+        return (int256(pos.sizeUsd) * (currentIndex - pos.fundingIndexSnapshot)) / 1e18;
     }
 
     function _syncVaultLockedExposure() internal {

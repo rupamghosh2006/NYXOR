@@ -18,9 +18,10 @@ contract LiquidityVault is AccessControl, ReentrancyGuard {
 
     IERC20 public immutable asset; // 6-decimal USDC
 
-    // LP Share tracking
-    uint256 public totalShares;
-    mapping(address => uint256) public sharesOf;
+    // LP Share tracking with Epoch separation
+    uint256 public epoch = 1;
+    mapping(uint256 => uint256) public totalSharesByEpoch;
+    mapping(uint256 => mapping(address => uint256)) public sharesOfByEpoch;
 
     // Accounting buckets (6-decimal units)
     uint256 public vaultAssets;       // LP principal + LP profits/losses
@@ -30,12 +31,13 @@ contract LiquidityVault is AccessControl, ReentrancyGuard {
     uint256 public lockedExposure;    // Liquidity reserved as counterparty for open positions
 
     // Events
-    event Deposited(address indexed lp, uint256 assets, uint256 shares);
-    event Withdrawn(address indexed lp, uint256 assets, uint256 shares);
+    event Deposited(address indexed lp, uint256 assets, uint256 shares, uint256 epoch);
+    event Withdrawn(address indexed lp, uint256 assets, uint256 shares, uint256 epoch);
     event FeeReceived(uint256 totalFee, uint256 insurancePortion, uint256 vaultPortion);
     event ShortfallCovered(uint256 totalShortfall, uint256 paidByInsurance, uint256 paidByVaultBadDebt);
     event TraderPnlSettled(int256 pnl, uint256 newVaultAssets);
     event LockedExposureUpdated(uint256 newLockedExposure);
+    event EpochAdvanced(uint256 newEpoch);
 
     // Errors
     error ZeroAmount();
@@ -61,6 +63,16 @@ contract LiquidityVault is AccessControl, ReentrancyGuard {
         emit LockedExposureUpdated(exposure);
     }
 
+    /// @notice Total active shares in current epoch
+    function totalShares() external view returns (uint256) {
+        return totalSharesByEpoch[epoch];
+    }
+
+    /// @notice Active shares of an LP in current epoch
+    function sharesOf(address lp) external view returns (uint256) {
+        return sharesOfByEpoch[epoch][lp];
+    }
+
     /// @notice Total assets held by the vault (LP assets + Insurance fund)
     function totalAssets() external view returns (uint256) {
         return vaultAssets + insuranceFund;
@@ -71,43 +83,47 @@ contract LiquidityVault is AccessControl, ReentrancyGuard {
         return vaultAssets > lockedExposure ? vaultAssets - lockedExposure : 0;
     }
 
-    /// @notice LP deposits collateral and receives proportional shares
+    /// @notice LP deposits collateral and receives proportional shares in current epoch
     function deposit(uint256 amount) external nonReentrant returns (uint256 shares) {
         if (amount == 0) revert ZeroAmount();
 
-        if (vaultAssets == 0) {
-            // When vaultAssets is 0 (first deposit OR vault was completely wiped by insolvency),
-            // previous shares hold zero claimable value. Reset totalShares so fresh capital is not diluted.
-            totalShares = 0;
+        if (vaultAssets == 0 && totalSharesByEpoch[epoch] > 0) {
+            // Vault was completely insolvent (assets wiped while shares existed).
+            // Advance to next epoch so old insolvent LPs cannot claim fresh recapitalized capital.
+            epoch++;
+            emit EpochAdvanced(epoch);
+        }
+
+        if (totalSharesByEpoch[epoch] == 0 || vaultAssets == 0) {
             shares = amount;
         } else {
-            shares = (amount * totalShares) / vaultAssets;
+            shares = (amount * totalSharesByEpoch[epoch]) / vaultAssets;
         }
         if (shares == 0) revert ZeroShares();
 
-        totalShares += shares;
-        sharesOf[msg.sender] += shares;
+        totalSharesByEpoch[epoch] += shares;
+        sharesOfByEpoch[epoch][msg.sender] += shares;
         vaultAssets += amount;
 
         asset.safeTransferFrom(msg.sender, address(this), amount);
-        emit Deposited(msg.sender, amount, shares);
+        emit Deposited(msg.sender, amount, shares, epoch);
     }
 
-    /// @notice LP redeems shares for underlying assets. Limited by free liquidity.
+    /// @notice LP redeems shares for underlying assets in current epoch. Limited by free liquidity.
     function withdraw(uint256 shares) external nonReentrant returns (uint256 assetsOut) {
         if (shares == 0) revert ZeroShares();
-        if (sharesOf[msg.sender] < shares) revert InsufficientBalance();
+        if (sharesOfByEpoch[epoch][msg.sender] < shares) revert InsufficientBalance();
 
-        assetsOut = (shares * vaultAssets) / totalShares;
+        assetsOut = (shares * vaultAssets) / totalSharesByEpoch[epoch];
         if (assetsOut == 0) revert ZeroAmount();
         if (vaultAssets - assetsOut < lockedExposure) revert InsufficientFreeLiquidity();
 
-        sharesOf[msg.sender] -= shares;
-        totalShares -= shares;
+        sharesOfByEpoch[epoch][msg.sender] -= shares;
+        totalSharesByEpoch[epoch] -= shares;
         vaultAssets -= assetsOut;
 
         asset.safeTransfer(msg.sender, assetsOut);
-        emit Withdrawn(msg.sender, assetsOut, shares);
+        emit Withdrawn(msg.sender, assetsOut, shares, epoch);
     }
 
     /// @notice Receives trading fee from PerpMarket, splitting between vault assets and insurance fund

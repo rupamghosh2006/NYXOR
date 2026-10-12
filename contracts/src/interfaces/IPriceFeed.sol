@@ -9,4 +9,7 @@ interface IPriceFeed {
     /// @return price1e8  Current price with 8 decimal places
     /// @return updatedAt Unix timestamp of the last price update (from IMarketClock.now())
     function latestPrice() external view returns (uint256 price1e8, uint256 updatedAt);
+
+    /// @notice Official price recorded at session close, used during CLOSED phase and reopen gap calculation
+    function lastOfficialClosePrice() external view returns (uint256);
 }

@@ -26,6 +26,7 @@ interface IPerpMarket {
     function removeMargin(uint256 amount) external;
     function liquidate(address trader) external;
     function deleverageToCap(address trader) external;
+    function settleFunding() external;
 
     function getPosition(address trader) external view returns (Position memory);
     function getEquity(address trader) external view returns (int256 equityUsd);
