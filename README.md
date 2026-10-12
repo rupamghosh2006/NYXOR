@@ -156,9 +156,8 @@ Open [http://localhost:3000](http://localhost:3000) to view the live dashboard c
 
 ## 10. AI Tools Disclosure
 
-Built as part of the Avalanche "Build Anything" Speedrun Hackathon. The following AI coding tools were used:
-- **Anthropic Claude 3.7 / Sonnet (via Antigravity):** Contract design, Hinnant date decomposition algorithms, formal invariant specification, and risk model math.
-- **Google Gemini 2.5 Flash / Pro (via Antigravity):** High-speed tool execution, test harness verification, Next.js frontend scaffolding, and Snowscan API query verification.
+<!-- AI TOOLS PLACEHOLDER: Fill in tools used during development -->
+[To be completed by author]
 
 ---
 

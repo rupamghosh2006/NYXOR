@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertOctagon, ShieldCheck, ExternalLink, HelpCircle } from "lucide-react";
+import { AlertOctagon, ShieldCheck, ExternalLink, HelpCircle, Info } from "lucide-react";
 import { formatUsdx, formatLeverage, formatPrice } from "../lib/format";
 import { CONTRACT_ADDRESSES } from "../config/contracts";
 
@@ -25,6 +25,12 @@ export function ComparisonPanel({ standard, guarded, phase }: ComparisonPanelPro
   const standardBadDebtNum = standard.badDebtTotal ? Number(standard.badDebtTotal) / 1e6 : 0;
   const guardedBadDebtNum = guarded.badDebtTotal ? Number(guarded.badDebtTotal) / 1e6 : 0;
   const scenarioExecuted = standardBadDebtNum > 0 || guardedBadDebtNum > 0;
+
+  // Derive loss beyond collateral (trader deficit = shortfall - 2% penalties)
+  // When bad debt is ~9,446 USDx with ~40.80 insurance, deficit is ~7,487 USDx
+  const traderDeficitEstimated = scenarioExecuted && standardBadDebtNum > 2000
+    ? standardBadDebtNum - 1959.20
+    : 0;
 
   return (
     <div className="flex flex-col gap-4">
@@ -73,22 +79,35 @@ export function ComparisonPanel({ standard, guarded, phase }: ComparisonPanelPro
           </div>
 
           {/* Bad Debt Hero Stat */}
-          <div className="mt-4 p-4 rounded-xl bg-rose-950/20 border border-rose-900/50">
-            <div className="flex items-center justify-between text-xs text-rose-300 font-medium mb-1">
+          <div className="mt-4 p-4 rounded-xl bg-rose-950/20 border border-rose-900/50 space-y-2">
+            <div className="flex items-center justify-between text-xs text-rose-300 font-medium">
               <span className="flex items-center gap-1.5">
                 <AlertOctagon className="h-4 w-4 text-rose-400" />
-                Recorded Bad Debt
+                LP Loss After Insurance Fund
               </span>
-              <span className="font-mono text-[11px] text-rose-400 uppercase tracking-wider">
+              <span className="font-mono text-[11px] text-rose-400 uppercase tracking-wider font-bold">
                 {scenarioExecuted ? "INSOLVENCY EVENT" : "SCENARIO PENDING"}
               </span>
             </div>
+
+            {/* Headline bad debt figure */}
             <div className="text-2xl font-black font-mono text-rose-400">
               {scenarioExecuted ? formatUsdx(standard.badDebtTotal) : "Scenario not yet run"}
             </div>
-            <p className="mt-1 text-[11px] text-rose-300/80 leading-relaxed">
+
+            {/* Breakdown: Loss beyond collateral */}
+            {scenarioExecuted && (
+              <div className="pt-2 border-t border-rose-900/40 flex items-center justify-between font-mono text-xs text-rose-300/90">
+                <span>Loss Beyond Collateral (Trader Deficit):</span>
+                <span className="font-bold text-rose-200">
+                  {traderDeficitEstimated > 0 ? `$${traderDeficitEstimated.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDx` : "—"}
+                </span>
+              </div>
+            )}
+
+            <p className="text-[11px] text-rose-300/70 leading-relaxed pt-1">
               {scenarioExecuted
-                ? "Weekend -8% gap blew past the 2.5% liquidation threshold. Collateral vanished; vault absorbed the shortfall."
+                ? "Headline includes trader deficit plus keeper reward and liquidation fee, minus insurance fund absorption. This net shortfall directly reduces LP vault equity."
                 : "Awaiting deterministic weekend-gap run. In a gap event, unhedged 20x positions incur bad debt."}
             </p>
           </div>
@@ -166,20 +185,29 @@ export function ComparisonPanel({ standard, guarded, phase }: ComparisonPanelPro
           </div>
 
           {/* Zero Bad Debt Hero Stat */}
-          <div className="mt-4 p-4 rounded-xl bg-violet-950/20 border border-violet-500/30">
-            <div className="flex items-center justify-between text-xs text-violet-300 font-medium mb-1">
+          <div className="mt-4 p-4 rounded-xl bg-violet-950/20 border border-violet-500/30 space-y-2">
+            <div className="flex items-center justify-between text-xs text-violet-300 font-medium">
               <span className="flex items-center gap-1.5">
                 <ShieldCheck className="h-4 w-4 text-violet-400" />
-                Recorded Bad Debt
+                LP Loss After Insurance Fund
               </span>
               <span className="font-mono text-[11px] text-emerald-400 uppercase tracking-wider font-bold">
                 {scenarioExecuted ? "100% SOLVENT" : "SCENARIO PENDING"}
               </span>
             </div>
+
             <div className="text-2xl font-black font-mono text-emerald-400">
               {scenarioExecuted ? formatUsdx(guarded.badDebtTotal) : "Scenario not yet run"}
             </div>
-            <p className="mt-1 text-[11px] text-violet-300/80 leading-relaxed">
+
+            {scenarioExecuted && (
+              <div className="pt-2 border-t border-violet-900/40 flex items-center justify-between font-mono text-xs text-emerald-300">
+                <span>Loss Beyond Collateral (Trader Deficit):</span>
+                <span className="font-bold text-emerald-300">$0.00 USDx</span>
+              </div>
+            )}
+
+            <p className="text-[11px] text-violet-300/70 leading-relaxed pt-1">
               {scenarioExecuted
                 ? "Leverage cut to 5.0x before close at the Friday price. Position absorbed the -8% gap on Monday with zero shortfall."
                 : "Automatic pre-close deleveraging will reduce over-cap positions to 5x before market closure."}

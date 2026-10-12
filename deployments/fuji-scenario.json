@@ -1,7 +1,20 @@
 {
-  "_comment": "Real broadcast deterministic weekend-gap scenario on Avalanche Fuji C-Chain (Chain ID 43113)",
-  "executedAt": "2026-10-12T09:09:16Z",
+  "_comment": "Clean single-pass deterministic weekend-gap scenario on Avalanche Fuji C-Chain (Chain ID 43113)",
+  "executedAt": "2026-10-12T09:36:20Z",
   "deployer": "0x4AD14e89622A046803988213E4a9846756531086",
+  "deployment": {
+    "DemoUSDC": "0x0857fA382043d910Ae1e587e1756746c96F7A169",
+    "MarketClock": "0x6f09eF68d78BfB1e8BDa9B389bB54e35C27265B9",
+    "MarketSchedule": "0x7a403129812532F6F5baC3cAb2c3a11bA5ad2C98",
+    "FlatRiskPolicy": "0x5e5Af1Fc5fa66977D01b7D08f0aC505eD9d4bCE2",
+    "MarketHoursRiskPolicy": "0x6C09E0aCB5f8e5FF6681D946a6e561EBE3C9dEe6",
+    "MockPriceFeedStandard": "0x809B492BdfC43A36392821bcC684b0020b345fCe",
+    "MockPriceFeedGuarded": "0x1710E8C0310186280AbAE3889278EA55c0A53b50",
+    "LiquidityVaultStandard": "0x7f758330d60bd3B51E94B2582e4c05DFAbE765F8",
+    "LiquidityVaultGuarded": "0x442697fea0BAF3775149B415d502e8c06dF05e92",
+    "PerpMarketStandard": "0xd0f198adCa10703D8a85355120aD806B850Dca75",
+    "PerpMarketGuarded": "0x724b9525b6Dd7Cc81ad37a06b1A20006BBDc83cB"
+  },
   "traders": {
     "T1_20x_Long": "0x2d44ca7bC174E2c0bF4CB07e22B340A496150403",
     "T2_10x_Long": "0x44E57c5F6A82E1CA004C6d7C21955b17C1A46377",
@@ -10,108 +23,142 @@
   "transactions": {
     "phase1_open_and_trades": [
       {
+        "description": "Clock warp to Friday OPEN (T-2h)",
+        "hash": "0x7927f29ad1eba5b2ebde05c5e1224733aeb1a5f49e36f768f0d622e569f83ef1",
+        "block": 59333241
+      },
+      {
+        "description": "Set Initial Price 4,150.00 USD (Standard)",
+        "hash": "0xdb913fdb52f0d6c21f54a812af4d420dc3678a7db9ee11c501a43b2243b9afab",
+        "block": 59333242
+      },
+      {
+        "description": "Set Initial Price 4,150.00 USD (Guarded)",
+        "hash": "0xd044ac5da121f9a77d277b9ed7d7bd9fac8617894cd08ed7c1a84697bea774f2",
+        "block": 59333243
+      },
+      {
+        "description": "Mint USDC margin to T1",
+        "hash": "0x85445993cf05a6091397d80ff2dbeaa3f0afbc73a459fa210f7cb434037a4278",
+        "block": 59333244
+      },
+      {
+        "description": "Mint USDC margin to T2",
+        "hash": "0xf8387b773c53a918b55aad6d9443cc470841de304979d341f8af3bf68f745e23",
+        "block": 59333245
+      },
+      {
+        "description": "Mint USDC margin to T3",
+        "hash": "0xdc37e5d1283413b9b46d3c76c585f2cf864eaadac3a892b500c23571b877ee09",
+        "block": 59333246
+      },
+      {
         "description": "T1 Open 20x Long on Standard (200,000 USDx notional)",
-        "hash": "0xe57d02b41b414635039749adb511b3f18a50984fc8639718d552de173da3ba8d",
-        "block": 59332223
+        "hash": "0x94e36ddf56bac2af9f23d086076a0b7a4cd4a598346d6ffeda22f6d990391dbb",
+        "block": 59333249
       },
       {
         "description": "T1 Open 20x Long on Guarded (200,000 USDx notional)",
-        "hash": "0xa5e475162843ff11c51775138092e8f36b98cef181003f1eb30c8ad5338065f8",
-        "block": 59332226
+        "hash": "0xc831b70682304975870bf5bc25876e7ad586bf7880161323a8d238beb2454a0c",
+        "block": 59333250
       },
       {
         "description": "T2 Open 10x Long on Standard (80,000 USDx notional)",
-        "hash": "0xc436ebe0ceadfd7e52a8f39fe7013623a5a2b43d6bf10c101d3deaff90edbbdb",
-        "block": 59332232
+        "hash": "0xde2837e9a690f161c20d1841f04be285ec3dfe61519ef470c08f8269566ae70f",
+        "block": 59333253
       },
       {
         "description": "T2 Open 10x Long on Guarded (80,000 USDx notional)",
-        "hash": "0x9dd795c3de035d9c982bb98b8864b3eddde97f5343369470ef510f67d1175f8b",
-        "block": 59332235
+        "hash": "0x9dbc6025f9c9bb8b3a0527640bc54aab0caf8263604d7ad0c395edf40c529edf",
+        "block": 59333254
       },
       {
         "description": "T3 Open 10x Short on Standard (60,000 USDx notional)",
-        "hash": "0x3341e76c690dd421de3e107dccd65870005b0c681276e605a13bb9a3fbe5f6f8",
-        "block": 59332238
+        "hash": "0xfce60d89b218c12db5ffc34ef52078dd53025e1bad20ecae731e7a52df931d2f",
+        "block": 59333257
       },
       {
         "description": "T3 Open 10x Short on Guarded (60,000 USDx notional)",
-        "hash": "0x111d78a9c78569294ab77c7b2fbf113a94e18b34a317e188298ef37949f3a9dd",
-        "block": 59332240
+        "hash": "0x0e8bdb25880878dd81780c962f9fc6adf5273d27cfab2a1a4c99a1985b11009d",
+        "block": 59333258
       }
     ],
     "phase3_keeper_deleverage": [
       {
         "description": "Clock warp to Friday PRE_CLOSE deleverage window (T-7.5m)",
-        "hash": "0x3d9331f0bcde86ea5c2b6f9b00885bce2935449dd9616b67202d3ac53bcfe612",
-        "block": 59332547
+        "hash": "0x3448062f3ca4bc75af2f0f0445ade4c3b8a8db62a853ad5372097fe02af0825c",
+        "block": 59333259
       },
       {
         "description": "Refresh Friday price quote to 4,150.00 USD (Standard)",
-        "hash": "0x4b3018f924f6dd07f20ae0b11c741270e25e7a7eb3cbb46f35830aef759bf127",
-        "block": 59332548
+        "hash": "0xe59593f30cdfdb71631fce18c3320ec28b748814ed305019c9a8d3bd01507ee3",
+        "block": 59333260
       },
       {
         "description": "Refresh Friday price quote to 4,150.00 USD (Guarded)",
-        "hash": "0x35fd4811e373fc1829ad0ce2eca2a45e65f89594f83368987a4e5e1af58fda32",
-        "block": 59332549
+        "hash": "0x5086f865d03245f9a59b7a8d954dabfe9cfdbc9ad58729f9379fdcc30ca2cb72",
+        "block": 59333261
       },
       {
         "description": "Keeper cuts Guarded T1 leverage to 5.00x cap at Friday price",
-        "hash": "0x086294bc68d94678015d8354a1b26e1256e034b403b988fa2f589c16b14a362b",
-        "block": 59332550
+        "hash": "0x1233bd71e5b63bdde62f110a7be85dcc76794367ebe547e1d11a8b54724fe676",
+        "block": 59333262
       },
       {
         "description": "Keeper cuts Guarded T2 leverage to 5.00x cap at Friday price",
-        "hash": "0xbf997842d77fce282b2b5713d1c49b5cd0c289cb15b63f1eff471ed7223b47f0",
-        "block": 59332551
+        "hash": "0x855811c7a462206aa8850b8925a272b1cb601bfb7497dd627b3bd318b917d0bb",
+        "block": 59333263
       }
     ],
     "phase4_closed_checkpoint": [
       {
         "description": "Clock warp to Saturday CLOSED phase",
-        "hash": "0x0dc5fd387c264a515951050f5a390ee1f698b4e12121d5519712266935927347",
-        "block": 59332552
+        "hash": "0x32dc84551bc0eb176f88d2a533c5148e98ddef8d4865ce03ec651c2bb922e328",
+        "block": 59333264
       },
       {
         "description": "Checkpoint Friday close price (Standard)",
-        "hash": "0xc957baaa05a6dc1d0595a1846f94288f10dfb4ab80ca2841a4b0791c9159834c",
-        "block": 59332553
+        "hash": "0x5897e23bfabb555df3d09a6cf5767db19c3535017171c048da634009838b556f",
+        "block": 59333265
       },
       {
         "description": "Checkpoint Friday close price (Guarded)",
-        "hash": "0x055383e245d017e4ed4b46915ef8c6ba35bc90a1310470578d20741000ec59d6",
-        "block": 59332554
+        "hash": "0x11499abd62c222e8892331412ec87fb604516b5206472d8dac8aad8479261089",
+        "block": 59333266
       }
     ],
     "phase5_monday_reopen_shock": [
       {
         "description": "Clock warp to Monday Reopen Cooldown",
-        "hash": "0x02757bad5c966e8e3812eea71e09a99bd5853b016c859df693fce44ca5b90f28",
-        "block": 59332555
+        "hash": "0xf944e260b05ea166d8b4a7d0aeabe7b9324a8e45622e5a63a513007cd87551fc",
+        "block": 59333267
       },
       {
         "description": "Apply -8.00% gap shock to 3,818.00 USD (Standard)",
-        "hash": "0x117c51c87b68c5059f511c0883692918600a7ab4fec9e80411adb9cd8d3ab782",
-        "block": 59332556
+        "hash": "0xcf368f6b128146b8f52ad2135243e0ec18ccdbe92d7c1477016c497df27cb13c",
+        "block": 59333268
       },
       {
         "description": "Apply -8.00% gap shock to 3,818.00 USD (Guarded)",
-        "hash": "0x9d39e817e2f5aae5869c5333977efa7634356d41dc462417a8e1611e43dc5362",
-        "block": 59332557
+        "hash": "0x5748618c5b5aebb5b7ce1fec09921cbabc2a39db9cdd1f860c615466843a50d2",
+        "block": 59333269
       }
     ],
     "phase6_liquidations": [
       {
-        "description": "Liquidate Standard underwater 20x position T1 (deficit exceeds margin -> bad debt)",
-        "hash": "0xed882a5c3702338c518989ba4727d91eda0ac6458fa02fd43991aea32b90bdef",
-        "block": 59332558
+        "description": "Liquidate Standard underwater 20x position T1",
+        "hash": "0x9e0eed1a20f6dadc8bf268c6fe2f32e768aeae30dae91b222c5347c896c0b5be",
+        "block": 59333270
       }
     ]
   },
-  "liveOutcome": {
-    "vaultStandardBadDebtRaw": "16287021111",
-    "vaultStandardBadDebtFormatted": "16,287.02 USDx",
+  "reconciliation": {
+    "lossBeyondCollateral": "7,487.22 USDx",
+    "totalLiquidationShortfall": "9,487.22 USDx",
+    "insuranceFundAbsorbed": "40.80 USDx",
+    "lpLossAfterInsuranceFund": "9,446.42 USDx",
+    "vaultStandardBadDebtRaw": "9446419444",
+    "vaultStandardBadDebtFormatted": "9,446.42 USDx",
     "vaultGuardedBadDebtRaw": "0",
     "vaultGuardedBadDebtFormatted": "0.00 USDx"
   }
