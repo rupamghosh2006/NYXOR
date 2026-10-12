@@ -3,7 +3,7 @@
 import { ExternalLink, CheckCircle2, ShieldAlert, ArrowRight, Layers, Info } from "lucide-react";
 import { useReadContracts } from "wagmi";
 import {
-  CONTRACT_ADDRESSES,
+  BENCHMARK_CONTRACT_ADDRESSES,
   DEPLOYMENT_METADATA,
   LIQUIDITY_VAULT_ABI,
   PERP_MARKET_ABI,
@@ -16,42 +16,42 @@ export function RecordedRun() {
   const { data, isLoading } = useReadContracts({
     contracts: [
       {
-        address: CONTRACT_ADDRESSES.LiquidityVaultStandard,
+        address: BENCHMARK_CONTRACT_ADDRESSES.LiquidityVaultStandard,
         abi: LIQUIDITY_VAULT_ABI,
         functionName: "vaultAssets",
       },
       {
-        address: CONTRACT_ADDRESSES.LiquidityVaultStandard,
+        address: BENCHMARK_CONTRACT_ADDRESSES.LiquidityVaultStandard,
         abi: LIQUIDITY_VAULT_ABI,
         functionName: "insuranceFund",
       },
       {
-        address: CONTRACT_ADDRESSES.LiquidityVaultStandard,
+        address: BENCHMARK_CONTRACT_ADDRESSES.LiquidityVaultStandard,
         abi: LIQUIDITY_VAULT_ABI,
         functionName: "badDebtTotal",
       },
       {
-        address: CONTRACT_ADDRESSES.LiquidityVaultGuarded,
+        address: BENCHMARK_CONTRACT_ADDRESSES.LiquidityVaultGuarded,
         abi: LIQUIDITY_VAULT_ABI,
         functionName: "vaultAssets",
       },
       {
-        address: CONTRACT_ADDRESSES.LiquidityVaultGuarded,
+        address: BENCHMARK_CONTRACT_ADDRESSES.LiquidityVaultGuarded,
         abi: LIQUIDITY_VAULT_ABI,
         functionName: "insuranceFund",
       },
       {
-        address: CONTRACT_ADDRESSES.LiquidityVaultGuarded,
+        address: BENCHMARK_CONTRACT_ADDRESSES.LiquidityVaultGuarded,
         abi: LIQUIDITY_VAULT_ABI,
         functionName: "badDebtTotal",
       },
       {
-        address: CONTRACT_ADDRESSES.PerpMarketStandard,
+        address: BENCHMARK_CONTRACT_ADDRESSES.PerpMarketStandard,
         abi: PERP_MARKET_ABI,
         functionName: "totalOiLongUsd",
       },
       {
-        address: CONTRACT_ADDRESSES.PerpMarketGuarded,
+        address: BENCHMARK_CONTRACT_ADDRESSES.PerpMarketGuarded,
         abi: PERP_MARKET_ABI,
         functionName: "totalOiLongUsd",
       },
@@ -86,7 +86,7 @@ export function RecordedRun() {
           <Layers className="h-4 w-4 text-cyan-400" />
           <div>
             <h2 className="font-bold text-white text-sm">
-              Recorded Scenario Run (Live Fuji C-Chain Broadcast)
+              Recorded Benchmark Run (Frozen Fuji On-Chain Instance)
             </h2>
             <p className="text-[11px] text-slate-400 font-mono">
               Executed at {fujiScenario.executedAt.replace("T", " ").replace("Z", " UTC")} · Chain ID 43113
@@ -103,7 +103,7 @@ export function RecordedRun() {
         <div className="p-3.5 rounded-xl bg-cyan-950/20 border border-cyan-800/40 text-xs text-cyan-200/90 leading-relaxed flex items-start gap-2">
           <Info className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
           <div>
-            <strong>Architecture & Test Scope Disclosure:</strong> The on-chain Fuji broadcast utilizes <strong>3 distinct trader wallets</strong> (T1 20x Long, T2 10x Long, T3 10x Short hedge) derived from the deployer key and funded with AVAX for gas. The local Foundry test suite (<code>WeekendGapScenario.t.sol</code>) exercises <strong>5 reference traders plus rejected trader T6</strong> across full stress vectors.
+            <strong>Architecture & Scope Disclosure:</strong> The on-chain Fuji broadcast utilizes <strong>3 distinct trader wallets</strong> (T1 20x Long, T2 10x Long, T3 10x Short hedge) derived from the deployer keypair. The local Foundry test suite (<code>WeekendGapScenario.t.sol</code>) exercises <strong>5 reference traders plus rejected trader T6</strong> across boundary conditions.
           </div>
         </div>
 
@@ -122,12 +122,12 @@ export function RecordedRun() {
                   Standard Vault (Naive 24/7)
                 </div>
                 <a
-                  href={`${EXPLORER_BASE}/address/${CONTRACT_ADDRESSES.LiquidityVaultStandard}`}
+                  href={`${EXPLORER_BASE}/address/${BENCHMARK_CONTRACT_ADDRESSES.LiquidityVaultStandard}`}
                   target="_blank"
                   rel="noreferrer"
                   className="text-slate-400 hover:text-slate-200 text-[11px] font-mono flex items-center gap-1"
                 >
-                  {CONTRACT_ADDRESSES.LiquidityVaultStandard.slice(0, 8)}…
+                  {BENCHMARK_CONTRACT_ADDRESSES.LiquidityVaultStandard.slice(0, 8)}…
                   <ExternalLink className="h-3 w-3" />
                 </a>
               </div>
@@ -141,11 +141,17 @@ export function RecordedRun() {
                   <span className="text-slate-100">{isLoading ? "…" : formatUsdx(stdInsur)}</span>
                 </div>
                 <div className="flex justify-between border-t border-slate-800/60 pt-2 mt-2">
-                  <span className="text-rose-300">Recorded Bad Debt</span>
+                  <span className="text-rose-300">Unbacked Trader Loss:</span>
                   <span className="text-rose-400 font-bold text-sm">
                     {isLoading ? "…" : isScenarioLive ? formatUsdx(stdBadDebt) : "Scenario not yet run"}
                   </span>
                 </div>
+                {isScenarioLive && (
+                  <div className="flex justify-between text-[11px] text-rose-300/80">
+                    <span>Loss Beyond Collateral:</span>
+                    <span>{fujiScenario.reconciliation.lossBeyondCollateral}</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -157,12 +163,12 @@ export function RecordedRun() {
                   Guarded Vault (Nyxor Engine)
                 </div>
                 <a
-                  href={`${EXPLORER_BASE}/address/${CONTRACT_ADDRESSES.LiquidityVaultGuarded}`}
+                  href={`${EXPLORER_BASE}/address/${BENCHMARK_CONTRACT_ADDRESSES.LiquidityVaultGuarded}`}
                   target="_blank"
                   rel="noreferrer"
                   className="text-slate-400 hover:text-slate-200 text-[11px] font-mono flex items-center gap-1"
                 >
-                  {CONTRACT_ADDRESSES.LiquidityVaultGuarded.slice(0, 8)}…
+                  {BENCHMARK_CONTRACT_ADDRESSES.LiquidityVaultGuarded.slice(0, 8)}…
                   <ExternalLink className="h-3 w-3" />
                 </a>
               </div>
@@ -176,11 +182,17 @@ export function RecordedRun() {
                   <span className="text-slate-100">{isLoading ? "…" : formatUsdx(grdInsur)}</span>
                 </div>
                 <div className="flex justify-between border-t border-slate-800/60 pt-2 mt-2">
-                  <span className="text-emerald-400">Recorded Bad Debt</span>
+                  <span className="text-emerald-400">Unbacked Trader Loss:</span>
                   <span className="text-emerald-400 font-bold text-sm">
                     {isLoading ? "…" : isScenarioLive ? formatUsdx(grdBadDebt) : "Scenario not yet run"}
                   </span>
                 </div>
+                {isScenarioLive && (
+                  <div className="flex justify-between text-[11px] text-emerald-300/80">
+                    <span>Loss Beyond Collateral:</span>
+                    <span>$0.00 USDx</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

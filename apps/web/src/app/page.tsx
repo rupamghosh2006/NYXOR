@@ -25,7 +25,7 @@ import { ExternalLink, Shield, Github, Sparkles, Database } from "lucide-react";
 export default function Home() {
   const { address, isConnected } = useAccount();
   const [selectedMarket, setSelectedMarket] = useState<"guarded" | "standard">("guarded");
-  const [deploymentInstance, setDeploymentInstance] = useState<DeploymentInstance>("recorded");
+  const [deploymentInstance, setDeploymentInstance] = useState<DeploymentInstance>("benchmark");
 
   const addresses = getAddressesForInstance(deploymentInstance);
 
@@ -288,14 +288,14 @@ export default function Home() {
             </div>
             <div className="flex flex-wrap gap-2">
               <button
-                onClick={() => setDeploymentInstance("recorded")}
+                onClick={() => setDeploymentInstance("benchmark")}
                 className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 ${
-                  deploymentInstance === "recorded"
+                  deploymentInstance === "benchmark"
                     ? "bg-violet-600 text-white font-bold shadow-lg shadow-violet-600/30"
                     : "bg-slate-800/80 text-slate-400 hover:text-white"
                 }`}
               >
-                <span>Permanent Fuji Benchmark (Scenario Broadcast)</span>
+                <span>Frozen Benchmark (Scenario Recorded — 9,446.42 Unbacked Loss)</span>
               </button>
               <button
                 onClick={() => setDeploymentInstance("demo")}
@@ -306,7 +306,7 @@ export default function Home() {
                 }`}
               >
                 <Sparkles className="h-3.5 w-3.5" />
-                <span>Fresh Demo Instance (Live Testing)</span>
+                <span>Fresh Demo Instance (Untouched — Ready for Video)</span>
               </button>
             </div>
           </div>

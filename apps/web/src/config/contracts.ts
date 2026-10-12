@@ -2,18 +2,18 @@
  * contracts.ts — Contract addresses and ABIs for Nyxor Protocol.
  *
  * Self-contained inside apps/web (reads from src/deployments/).
- * Supports both:
- * 1. "recorded": Permanent recorded Fuji benchmark deployment (fuji.json)
- * 2. "demo": Fresh interactive demo instance deployed via DeployDemo (demo-latest.json)
+ * Supports dual instance selection:
+ * 1. "benchmark": Frozen on-chain benchmark deployment with recorded scenario (fuji-benchmark.json)
+ * 2. "demo": Fresh interactive demo instance deployed via DeployDemo for video recording (demo-latest.json)
  */
-import fujiDeployments from "../deployments/fuji.json";
+import benchmarkDeployments from "../deployments/fuji-benchmark.json";
 import demoDeployments from "../deployments/demo-latest.json";
 import { activeChainId, activeExplorer } from "./chains";
 
 export const FUJI_CHAIN_ID = 43113;
 export { activeChainId as ACTIVE_CHAIN_ID, activeExplorer as EXPLORER_BASE };
 
-export type DeploymentInstance = "recorded" | "demo";
+export type DeploymentInstance = "benchmark" | "demo";
 
 function getDeploymentAddresses(deployments: Record<string, any>) {
   return {
@@ -32,19 +32,20 @@ function getDeploymentAddresses(deployments: Record<string, any>) {
   };
 }
 
-export const RECORDED_CONTRACT_ADDRESSES = getDeploymentAddresses(fujiDeployments);
+export const BENCHMARK_CONTRACT_ADDRESSES = getDeploymentAddresses(benchmarkDeployments);
 export const DEMO_CONTRACT_ADDRESSES = getDeploymentAddresses(demoDeployments);
 
 export function getAddressesForInstance(instance: DeploymentInstance) {
-  return instance === "demo" ? DEMO_CONTRACT_ADDRESSES : RECORDED_CONTRACT_ADDRESSES;
+  return instance === "demo" ? DEMO_CONTRACT_ADDRESSES : BENCHMARK_CONTRACT_ADDRESSES;
 }
 
-export const CONTRACT_ADDRESSES = RECORDED_CONTRACT_ADDRESSES;
+export const CONTRACT_ADDRESSES = BENCHMARK_CONTRACT_ADDRESSES;
 
 export const DEPLOYMENT_METADATA = {
-  network: fujiDeployments._network,
-  deployedAt: fujiDeployments._deployedAt,
-  deployTxComment: fujiDeployments._comment,
+  status: benchmarkDeployments.status,
+  deployedAt: benchmarkDeployments.deployedAt,
+  scenarioExecutedAt: benchmarkDeployments.scenarioExecutedAt,
+  deployTxComment: benchmarkDeployments._comment,
 };
 
 export const MARKET_CLOCK_ABI = [

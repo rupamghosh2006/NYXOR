@@ -1,0 +1,26 @@
+{
+  "_comment": "Permanent frozen benchmark deployment with recorded on-chain scenario run (Chain ID 43113)",
+  "status": "frozen_benchmark",
+  "deployedAt": "2026-10-12T09:33:36Z",
+  "scenarioExecutedAt": "2026-10-12T09:36:20Z",
+  "chainId": 43113,
+  "Deployer": "0x4AD14e89622A046803988213E4a9846756531086",
+  "DemoUSDC": "0x0857fA382043d910Ae1e587e1756746c96F7A169",
+  "MarketClock": "0x6f09eF68d78BfB1e8BDa9B389bB54e35C27265B9",
+  "MarketSchedule": "0x7a403129812532F6F5baC3cAb2c3a11bA5ad2C98",
+  "FlatRiskPolicy": "0x5e5Af1Fc5fa66977D01b7D08f0aC505eD9d4bCE2",
+  "MarketHoursRiskPolicy": "0x6C09E0aCB5f8e5FF6681D946a6e561EBE3C9dEe6",
+  "MockPriceFeedStandard": "0x809B492BdfC43A36392821bcC684b0020b345fCe",
+  "MockPriceFeedGuarded": "0x1710E8C0310186280AbAE3889278EA55c0A53b50",
+  "LiquidityVaultStandard": "0x7f758330d60bd3B51E94B2582e4c05DFAbE765F8",
+  "LiquidityVaultGuarded": "0x442697fea0BAF3775149B415d502e8c06dF05e92",
+  "PerpMarketStandard": "0xd0f198adCa10703D8a85355120aD806B850Dca75",
+  "PerpMarketGuarded": "0x724b9525b6Dd7Cc81ad37a06b1A20006BBDc83cB",
+  "recordedOutcome": {
+    "vaultStandardBadDebtRaw": "9446419444",
+    "vaultStandardBadDebtFormatted": "9,446.42 USDx",
+    "lossBeyondCollateral": "7,487.22 USDx",
+    "vaultGuardedBadDebtRaw": "0",
+    "vaultGuardedBadDebtFormatted": "0.00 USDx"
+  }
+}
