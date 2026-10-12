@@ -9,3 +9,5 @@ results/
 *.pem
 .DS_Store
 foundryup-install.sh
+.next/
+apps/web/.next/
