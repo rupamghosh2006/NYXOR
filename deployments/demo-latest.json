@@ -1,0 +1,16 @@
+{
+  "DemoUSDC": "0x59B63474A4D6962549cd90BB87F57EaAA551c270",
+  "Deployer": "0x4AD14e89622A046803988213E4a9846756531086",
+  "FlatRiskPolicy": "0x647cD18417B6c91C6e102582475677e074Ced391",
+  "LiquidityVaultGuarded": "0xdcC233D1E92a0A3725f8c8f0f39cF26750b33c2D",
+  "LiquidityVaultStandard": "0xCc925Bf9a09a84C5702cb0A72747189CEa0efDD7",
+  "MarketClock": "0x6D23C91c6A3fc9d9cA44AF2B233DDC10e4176017",
+  "MarketHoursRiskPolicy": "0x81C1cd2Bc04463427Ebe81D85ffC02853b1458e9",
+  "MarketSchedule": "0xCE79Fc8a9Cc3C2939e439ba5Eb338B718Aad28E1",
+  "MockPriceFeedGuarded": "0xe0CbEf45892F9f5f067A6c1C1e3af259890112AB",
+  "MockPriceFeedStandard": "0xd3c10eBc14B67766322b074d544FA9D9166740E8",
+  "PerpMarketGuarded": "0xFcE4836EfFF33A7e3eD25Dd32c39bDF5375Ed5D8",
+  "PerpMarketStandard": "0x1fcB5B0CE2a58D7485bdC4E247884Ee83Ba9c350",
+  "_comment": "Fresh demo deployment instance for interactive demo resets",
+  "chainId": 43113
+}

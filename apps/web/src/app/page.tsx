@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useAccount, useReadContracts } from "wagmi";
 import {
-  CONTRACT_ADDRESSES,
+  getAddressesForInstance,
+  type DeploymentInstance,
   MARKET_CLOCK_ABI,
   MARKET_SCHEDULE_ABI,
   PRICE_FEED_ABI,
@@ -19,96 +20,99 @@ import { ComparisonPanel } from "../components/ComparisonPanel";
 import { TradingPanel } from "../components/TradingPanel";
 import { AdminConsole } from "../components/AdminConsole";
 import { RecordedRun } from "../components/RecordedRun";
-import { ExternalLink, Shield, Github } from "lucide-react";
+import { ExternalLink, Shield, Github, Sparkles, Database } from "lucide-react";
 
 export default function Home() {
   const { address, isConnected } = useAccount();
   const [selectedMarket, setSelectedMarket] = useState<"guarded" | "standard">("guarded");
+  const [deploymentInstance, setDeploymentInstance] = useState<DeploymentInstance>("recorded");
+
+  const addresses = getAddressesForInstance(deploymentInstance);
 
   // Read Core System State
   const { data: coreData, refetch: refetchCore } = useReadContracts({
     contracts: [
       // 0: Clock effectiveNow
       {
-        address: CONTRACT_ADDRESSES.MarketClock,
+        address: addresses.MarketClock,
         abi: MARKET_CLOCK_ABI,
         functionName: "effectiveNow",
       },
       // 1: Clock demoMode
       {
-        address: CONTRACT_ADDRESSES.MarketClock,
+        address: addresses.MarketClock,
         abi: MARKET_CLOCK_ABI,
         functionName: "demoMode",
       },
       // 2: Standard Feed latestPrice
       {
-        address: CONTRACT_ADDRESSES.MockPriceFeedStandard,
+        address: addresses.MockPriceFeedStandard,
         abi: PRICE_FEED_ABI,
         functionName: "latestPrice",
       },
       // 3: Guarded Feed latestPrice
       {
-        address: CONTRACT_ADDRESSES.MockPriceFeedGuarded,
+        address: addresses.MockPriceFeedGuarded,
         abi: PRICE_FEED_ABI,
         functionName: "latestPrice",
       },
       // 4: Standard Vault Assets
       {
-        address: CONTRACT_ADDRESSES.LiquidityVaultStandard,
+        address: addresses.LiquidityVaultStandard,
         abi: LIQUIDITY_VAULT_ABI,
         functionName: "vaultAssets",
       },
       // 5: Standard Vault Insurance Fund
       {
-        address: CONTRACT_ADDRESSES.LiquidityVaultStandard,
+        address: addresses.LiquidityVaultStandard,
         abi: LIQUIDITY_VAULT_ABI,
         functionName: "insuranceFund",
       },
       // 6: Standard Vault Bad Debt
       {
-        address: CONTRACT_ADDRESSES.LiquidityVaultStandard,
+        address: addresses.LiquidityVaultStandard,
         abi: LIQUIDITY_VAULT_ABI,
         functionName: "badDebtTotal",
       },
       // 7: Guarded Vault Assets
       {
-        address: CONTRACT_ADDRESSES.LiquidityVaultGuarded,
+        address: addresses.LiquidityVaultGuarded,
         abi: LIQUIDITY_VAULT_ABI,
         functionName: "vaultAssets",
       },
       // 8: Guarded Vault Insurance Fund
       {
-        address: CONTRACT_ADDRESSES.LiquidityVaultGuarded,
+        address: addresses.LiquidityVaultGuarded,
         abi: LIQUIDITY_VAULT_ABI,
         functionName: "insuranceFund",
       },
       // 9: Guarded Vault Bad Debt
       {
-        address: CONTRACT_ADDRESSES.LiquidityVaultGuarded,
+        address: addresses.LiquidityVaultGuarded,
         abi: LIQUIDITY_VAULT_ABI,
         functionName: "badDebtTotal",
       },
       // 10: Standard Market OI Long
       {
-        address: CONTRACT_ADDRESSES.PerpMarketStandard,
+        address: addresses.PerpMarketStandard,
         abi: PERP_MARKET_ABI,
         functionName: "totalOiLongUsd",
       },
       // 11: Standard Market OI Short
       {
-        address: CONTRACT_ADDRESSES.PerpMarketStandard,
+        address: addresses.PerpMarketStandard,
         abi: PERP_MARKET_ABI,
         functionName: "totalOiShortUsd",
       },
       // 12: Guarded Market OI Long
       {
-        address: CONTRACT_ADDRESSES.PerpMarketGuarded,
+        address: addresses.PerpMarketGuarded,
         abi: PERP_MARKET_ABI,
         functionName: "totalOiLongUsd",
       },
       // 13: Guarded Market OI Short
       {
-        address: CONTRACT_ADDRESSES.PerpMarketGuarded,
+        address: addresses.PerpMarketGuarded,
         abi: PERP_MARKET_ABI,
         functionName: "totalOiShortUsd",
       },
@@ -130,21 +134,21 @@ export default function Home() {
     contracts: [
       // 0: Schedule phaseAt
       {
-        address: CONTRACT_ADDRESSES.MarketSchedule,
+        address: addresses.MarketSchedule,
         abi: MARKET_SCHEDULE_ABI,
         functionName: "phaseAt",
         args: [tsForPolicy],
       },
       // 1: Guarded Policy params
       {
-        address: CONTRACT_ADDRESSES.MarketHoursRiskPolicy,
+        address: addresses.MarketHoursRiskPolicy,
         abi: RISK_POLICY_ABI,
         functionName: "getParams",
         args: [tsForPolicy],
       },
       // 2: Standard Policy params
       {
-        address: CONTRACT_ADDRESSES.FlatRiskPolicy,
+        address: addresses.FlatRiskPolicy,
         abi: RISK_POLICY_ABI,
         functionName: "getParams",
         args: [tsForPolicy],
@@ -166,22 +170,22 @@ export default function Home() {
   // Read User Specific Data (Balances, Positions)
   const currentMarketAddress =
     selectedMarket === "guarded"
-      ? CONTRACT_ADDRESSES.PerpMarketGuarded
-      : CONTRACT_ADDRESSES.PerpMarketStandard;
+      ? addresses.PerpMarketGuarded
+      : addresses.PerpMarketStandard;
 
   const { data: userData, refetch: refetchUser } = useReadContracts({
     contracts: address
       ? [
           // 0: User USDC balance
           {
-            address: CONTRACT_ADDRESSES.DemoUSDC,
+            address: addresses.DemoUSDC,
             abi: ERC20_ABI,
             functionName: "balanceOf",
             args: [address],
           },
           // 1: User USDC allowance for selected market
           {
-            address: CONTRACT_ADDRESSES.DemoUSDC,
+            address: addresses.DemoUSDC,
             abi: ERC20_ABI,
             functionName: "allowance",
             args: [address, currentMarketAddress],
@@ -246,7 +250,7 @@ export default function Home() {
   // Check if connected address is Deployer / Admin
   const isAdmin =
     !!address &&
-    address.toLowerCase() === CONTRACT_ADDRESSES.Deployer.toLowerCase();
+    address.toLowerCase() === addresses.Deployer.toLowerCase();
 
   const handleRefreshAll = () => {
     refetchCore();
@@ -276,6 +280,37 @@ export default function Home() {
         <Banner demoMode={demoMode} />
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+          {/* Instance Selector */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800 text-xs font-mono">
+            <div className="flex items-center gap-2 text-slate-300">
+              <Database className="h-4 w-4 text-cyan-400" />
+              <span>Deployment Target:</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setDeploymentInstance("recorded")}
+                className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 ${
+                  deploymentInstance === "recorded"
+                    ? "bg-violet-600 text-white font-bold shadow-lg shadow-violet-600/30"
+                    : "bg-slate-800/80 text-slate-400 hover:text-white"
+                }`}
+              >
+                <span>Permanent Fuji Benchmark (Scenario Broadcast)</span>
+              </button>
+              <button
+                onClick={() => setDeploymentInstance("demo")}
+                className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 ${
+                  deploymentInstance === "demo"
+                    ? "bg-cyan-600 text-white font-bold shadow-lg shadow-cyan-600/30"
+                    : "bg-slate-800/80 text-slate-400 hover:text-white"
+                }`}
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>Fresh Demo Instance (Live Testing)</span>
+              </button>
+            </div>
+          </div>
+
           {/* Hero Section: Market Hours Phase Pill */}
           <PhaseHero
             phase={currentPhase}
@@ -365,7 +400,7 @@ export default function Home() {
             <ul className="space-y-1 font-mono text-[11px] text-slate-400">
               <li>
                 <a
-                  href={`https://testnet.snowscan.xyz/address/${CONTRACT_ADDRESSES.PerpMarketGuarded}`}
+                  href={`https://testnet.snowscan.xyz/address/${addresses.PerpMarketGuarded}`}
                   target="_blank"
                   rel="noreferrer"
                   className="hover:text-cyan-400 flex items-center gap-1"
@@ -376,7 +411,7 @@ export default function Home() {
               </li>
               <li>
                 <a
-                  href={`https://testnet.snowscan.xyz/address/${CONTRACT_ADDRESSES.LiquidityVaultGuarded}`}
+                  href={`https://testnet.snowscan.xyz/address/${addresses.LiquidityVaultGuarded}`}
                   target="_blank"
                   rel="noreferrer"
                   className="hover:text-cyan-400 flex items-center gap-1"
@@ -387,7 +422,7 @@ export default function Home() {
               </li>
               <li>
                 <a
-                  href={`https://testnet.snowscan.xyz/address/${CONTRACT_ADDRESSES.MarketHoursRiskPolicy}`}
+                  href={`https://testnet.snowscan.xyz/address/${addresses.MarketHoursRiskPolicy}`}
                   target="_blank"
                   rel="noreferrer"
                   className="hover:text-cyan-400 flex items-center gap-1"
@@ -398,7 +433,7 @@ export default function Home() {
               </li>
               <li>
                 <a
-                  href={`https://testnet.snowscan.xyz/address/${CONTRACT_ADDRESSES.MarketClock}`}
+                  href={`https://testnet.snowscan.xyz/address/${addresses.MarketClock}`}
                   target="_blank"
                   rel="noreferrer"
                   className="hover:text-cyan-400 flex items-center gap-1"

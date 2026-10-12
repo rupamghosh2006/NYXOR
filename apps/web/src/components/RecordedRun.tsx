@@ -1,6 +1,6 @@
 "use client";
 
-import { ExternalLink, CheckCircle2, ShieldAlert, ArrowRight, Layers } from "lucide-react";
+import { ExternalLink, CheckCircle2, ShieldAlert, ArrowRight, Layers, Info } from "lucide-react";
 import { useReadContracts } from "wagmi";
 import {
   CONTRACT_ADDRESSES,
@@ -10,7 +10,7 @@ import {
   EXPLORER_BASE,
 } from "../config/contracts";
 import { formatUsdx } from "../lib/format";
-import fujiScenario from "../../../../deployments/fuji-scenario.json";
+import fujiScenario from "../deployments/fuji-scenario.json";
 
 export function RecordedRun() {
   const { data, isLoading } = useReadContracts({
@@ -99,6 +99,14 @@ export function RecordedRun() {
       </div>
 
       <div className="p-6 space-y-6">
+        {/* Honest Disclosure Note */}
+        <div className="p-3.5 rounded-xl bg-cyan-950/20 border border-cyan-800/40 text-xs text-cyan-200/90 leading-relaxed flex items-start gap-2">
+          <Info className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
+          <div>
+            <strong>Architecture & Test Scope Disclosure:</strong> The on-chain Fuji broadcast utilizes <strong>3 distinct trader wallets</strong> (T1 20x Long, T2 10x Long, T3 10x Short hedge) derived from the deployer key and funded with AVAX for gas. The local Foundry test suite (<code>WeekendGapScenario.t.sol</code>) exercises <strong>5 reference traders plus rejected trader T6</strong> across full stress vectors.
+          </div>
+        </div>
+
         {/* Live Vault Status Box */}
         <div>
           <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3 flex items-center gap-2">
