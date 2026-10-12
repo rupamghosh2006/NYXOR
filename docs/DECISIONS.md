@@ -163,3 +163,13 @@ For the L1 if pursued. Assumed from subnet-evm docs:
 - TxAllowList: `0x0200000000000000000000000000000000000002`
 - FeeManager:  `0x0200000000000000000000000000000000000003`
 - Source to verify in Day 3 research: https://docs.avax.network/avalanche-l1s/evm-l1s/customize-evm-l1
+
+---
+
+## 2026-10-12 — Day 3 Hardening & Protocol Risk Mechanics
+
+1. **Effective Leverage Invariant:** Taker open fee (6 bps) is charged on top of margin (i.e. `margin + openFee` transferred from trader, while position collateral stores `margin`). Effective leverage at opening strictly equals `sizeUsd / collateral == leverageX100 <= maxLeverageX100` with zero leverage inflation.
+2. **Minimal Funding Rate Mechanism:** Implemented skew-based hourly funding per AGENTS.md §8.4 using 1e18 fixed-point arithmetic (`k = 10 bps`, clamp at `±25 bps/hr`, scaled by `params.fundingMultiplierBps`). Longs owe funding during positive long skew, shorts receive funding, and the vault acts as counterparty to net skew.
+3. **CLOSED Market Execution Pricing:** During `Phase.CLOSED`, `_getExecutionPrice()` executes against the frozen `lastOfficialClosePrice()` and bypasses staleness checks. Traders can call `closePosition()` and keepers can call `liquidate()` (against 6% MM) so trader capital is never trapped over weekends.
+4. **Deleveraging Funding Settlement:** `deleverageToCap` settles accrued funding and resets `fundingIndexSnapshot` upon resizing over-cap positions, ensuring remaining equity and target size align to precisely `5.00x` leverage without drift.
+5. **Stateful Invariant Testing:** Token conservation invariant (`marketBal + vaultBal >= totalTraderCollateral + vaultAssets + insuranceFund`) validated across 3,840 calls without invariant failure or unexpected reverts.

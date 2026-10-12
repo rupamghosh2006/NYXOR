@@ -1,0 +1,47 @@
+{
+  "_comment": "Reference only. Generate the real genesis from the Builder Console Genesis Builder and diff it against this file. Precompile: TxAllowList (0x0200000000000000000000000000000000000002). Replace {{CHAIN_ID}} and {{ADMIN_ADDRESS}} before deployment.",
+  "config": {
+    "chainId": 98421,
+    "homesteadBlock": 0,
+    "eip150Block": 0,
+    "eip155Block": 0,
+    "eip158Block": 0,
+    "byzantiumBlock": 0,
+    "constantinopleBlock": 0,
+    "petersburgBlock": 0,
+    "istanbulBlock": 0,
+    "muirGlacierBlock": 0,
+    "subnetEVMTimestamp": 0,
+    "feeConfig": {
+      "gasLimit": 15000000,
+      "minBaseFee": 25000000000,
+      "targetGas": 15000000,
+      "baseFeeChangeDenominator": 36,
+      "minBlockGasCost": 0,
+      "maxBlockGasCost": 1000000,
+      "targetBlockRate": 2,
+      "blockGasCostStep": 200000
+    },
+    "txAllowListConfig": {
+      "blockTimestamp": 0,
+      "adminAddresses": [
+        "{{ADMIN_ADDRESS}}"
+      ]
+    }
+  },
+  "alloc": {
+    "{{ADMIN_ADDRESS}}": {
+      "balance": "0xd3c21bcecceda1000000"
+    }
+  },
+  "nonce": "0x0",
+  "timestamp": "0x0",
+  "extraData": "0x00",
+  "gasLimit": "0xe4e1c0",
+  "difficulty": "0x0",
+  "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "coinbase": "0x0000000000000000000000000000000000000000",
+  "number": "0x0",
+  "gasUsed": "0x0",
+  "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+}
