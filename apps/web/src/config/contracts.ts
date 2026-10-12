@@ -1,20 +1,47 @@
+/**
+ * contracts.ts — Contract addresses and ABIs for Nyxor Protocol.
+ *
+ * Addresses are read from deployments/fuji.json at build time.
+ * Override individual addresses via NEXT_PUBLIC_ADDR_* env vars
+ * (see .env.example) when targeting a different deployment.
+ */
 import fujiDeployments from "../../../../deployments/fuji.json";
+import { activeChainId, activeExplorer } from "./chains";
 
 export const FUJI_CHAIN_ID = 43113;
+export { activeChainId as ACTIVE_CHAIN_ID, activeExplorer as EXPLORER_BASE };
+
+/** Helper: address env override or fall back to fuji deployment. */
+function addr(envKey: string, fujiAddr: string): `0x${string}` {
+  const override = process.env[envKey];
+  if (override && override.startsWith("0x")) return override as `0x${string}`;
+  return fujiAddr as `0x${string}`;
+}
 
 export const CONTRACT_ADDRESSES = {
-  DemoUSDC: fujiDeployments.DemoUSDC as `0x${string}`,
-  MarketClock: fujiDeployments.MarketClock as `0x${string}`,
-  MarketSchedule: fujiDeployments.MarketSchedule as `0x${string}`,
-  MockPriceFeedStandard: fujiDeployments.MockPriceFeedStandard as `0x${string}`,
-  MockPriceFeedGuarded: fujiDeployments.MockPriceFeedGuarded as `0x${string}`,
-  FlatRiskPolicy: fujiDeployments.FlatRiskPolicy as `0x${string}`,
-  MarketHoursRiskPolicy: fujiDeployments.MarketHoursRiskPolicy as `0x${string}`,
-  LiquidityVaultStandard: fujiDeployments.LiquidityVaultStandard as `0x${string}`,
-  LiquidityVaultGuarded: fujiDeployments.LiquidityVaultGuarded as `0x${string}`,
-  PerpMarketStandard: fujiDeployments.PerpMarketStandard as `0x${string}`,
-  PerpMarketGuarded: fujiDeployments.PerpMarketGuarded as `0x${string}`,
-  Deployer: fujiDeployments.Deployer as `0x${string}`,
+  DemoUSDC:              addr("NEXT_PUBLIC_ADDR_DEMO_USDC",                    fujiDeployments.DemoUSDC),
+  MarketClock:           addr("NEXT_PUBLIC_ADDR_MARKET_CLOCK",                 fujiDeployments.MarketClock),
+  MarketSchedule:        addr("NEXT_PUBLIC_ADDR_MARKET_SCHEDULE",              fujiDeployments.MarketSchedule),
+  MockPriceFeedStandard: addr("NEXT_PUBLIC_ADDR_FEED_STANDARD",               fujiDeployments.MockPriceFeedStandard),
+  MockPriceFeedGuarded:  addr("NEXT_PUBLIC_ADDR_FEED_GUARDED",                fujiDeployments.MockPriceFeedGuarded),
+  FlatRiskPolicy:        addr("NEXT_PUBLIC_ADDR_FLAT_RISK_POLICY",            fujiDeployments.FlatRiskPolicy),
+  MarketHoursRiskPolicy: addr("NEXT_PUBLIC_ADDR_MARKET_HOURS_RISK_POLICY",    fujiDeployments.MarketHoursRiskPolicy),
+  LiquidityVaultStandard:addr("NEXT_PUBLIC_ADDR_VAULT_STANDARD",              fujiDeployments.LiquidityVaultStandard),
+  LiquidityVaultGuarded: addr("NEXT_PUBLIC_ADDR_VAULT_GUARDED",               fujiDeployments.LiquidityVaultGuarded),
+  PerpMarketStandard:    addr("NEXT_PUBLIC_ADDR_PERP_MARKET_STANDARD",        fujiDeployments.PerpMarketStandard),
+  PerpMarketGuarded:     addr("NEXT_PUBLIC_ADDR_PERP_MARKET_GUARDED",         fujiDeployments.PerpMarketGuarded),
+  Deployer:              addr("NEXT_PUBLIC_ADDR_DEPLOYER",                    fujiDeployments.Deployer),
+};
+
+// ─── Fuji deployment metadata (sourced strictly from deployments/fuji.json) ───
+// The scenario script was simulated locally with forge; the on-chain
+// RunWeekendScenario.s.sol was NOT broadcast to Fuji. The numbers shown in
+// the "Recorded run" section come from the Foundry test simulation, not from
+// a live Fuji transaction. This is documented in docs/LIMITATIONS.md.
+export const DEPLOYMENT_METADATA = {
+  network: fujiDeployments._network,
+  deployedAt: fujiDeployments._deployedAt,
+  deployTxComment: fujiDeployments._comment,
 };
 
 export const MARKET_CLOCK_ABI = [
@@ -185,6 +212,13 @@ export const LIQUIDITY_VAULT_ABI = [
   {
     type: "function",
     name: "lockedExposure",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "totalShares",
     inputs: [],
     outputs: [{ name: "", type: "uint256" }],
     stateMutability: "view",

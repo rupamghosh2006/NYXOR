@@ -18,7 +18,8 @@ import { PhaseHero } from "../components/PhaseHero";
 import { ComparisonPanel } from "../components/ComparisonPanel";
 import { TradingPanel } from "../components/TradingPanel";
 import { AdminConsole } from "../components/AdminConsole";
-import { ExternalLink, Shield, Github, BookOpen } from "lucide-react";
+import { RecordedRun } from "../components/RecordedRun";
+import { ExternalLink, Shield, Github } from "lucide-react";
 
 export default function Home() {
   const { address, isConnected } = useAccount();
@@ -310,6 +311,9 @@ export default function Home() {
               reduceOnly: guardedParams?.reduceOnly || false,
             }}
           />
+
+          {/* Deployment Record & Live Vault State — no wallet required */}
+          <RecordedRun />
 
           {/* Interactive Trading & Position Card */}
           <TradingPanel
