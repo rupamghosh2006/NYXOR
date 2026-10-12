@@ -73,17 +73,17 @@ All contracts are compiled with Solidity `0.8.24`, deployed to Avalanche Fuji C-
 
 | Contract | Address | Explorer Link |
 |---|---|---|
-| **PerpMarketGuarded** | `0x400D575b8BE7a395fBF4BC8161A4A454605730C7` | [Snowscan](https://testnet.snowscan.xyz/address/0x400D575b8BE7a395fBF4BC8161A4A454605730C7) |
-| **LiquidityVaultGuarded** | `0x648b16f94C1ff3776368d8Bc067b5F8881ce6Cfd` | [Snowscan](https://testnet.snowscan.xyz/address/0x648b16f94C1ff3776368d8Bc067b5F8881ce6Cfd) |
-| **MarketHoursRiskPolicy** | `0x820BE01587cfd1F9c6d46cB363f09D5c9Dcae974` | [Snowscan](https://testnet.snowscan.xyz/address/0x820BE01587cfd1F9c6d46cB363f09D5c9Dcae974) |
-| **PerpMarketStandard** | `0x2268c8cB67e1cd78Ca4Ab254894BB5F5D1E23Fab` | [Snowscan](https://testnet.snowscan.xyz/address/0x2268c8cB67e1cd78Ca4Ab254894BB5F5D1E23Fab) |
-| **LiquidityVaultStandard** | `0x4c38297282959b86482b10d59210c3f2df84B659` | [Snowscan](https://testnet.snowscan.xyz/address/0x4c38297282959b86482b10d59210c3f2df84B659) |
-| **FlatRiskPolicy** | `0x4341D3A566AC6e0e51076B9fEf68EFE3ca5E047F` | [Snowscan](https://testnet.snowscan.xyz/address/0x4341D3A566AC6e0e51076B9fEf68EFE3ca5E047F) |
-| **MarketClock** | `0x0269Fa1782f5Ed743486091900aa24eF1C8dCadA` | [Snowscan](https://testnet.snowscan.xyz/address/0x0269Fa1782f5Ed743486091900aa24eF1C8dCadA) |
-| **MarketSchedule** | `0x3f5560b462Dc91339FAAeaCde7A0E98D26a20aAb` | [Snowscan](https://testnet.snowscan.xyz/address/0x3f5560b462Dc91339FAAeaCde7A0E98D26a20aAb) |
-| **MockPriceFeedGuarded** | `0x66ac4aB263B69BE7003089BE185A202a9E981fCa` | [Snowscan](https://testnet.snowscan.xyz/address/0x66ac4aB263B69BE7003089BE185A202a9E981fCa) |
-| **MockPriceFeedStandard** | `0x7F7b80959F30A06D3f066b8b63B065B02aD1A4D7` | [Snowscan](https://testnet.snowscan.xyz/address/0x7F7b80959F30A06D3f066b8b63B065B02aD1A4D7) |
-| **DemoUSDC** | `0x802508DB190b1826c6fC4238B5172F344ba96811` | [Snowscan](https://testnet.snowscan.xyz/address/0x802508DB190b1826c6fC4238B5172F344ba96811) |
+| **PerpMarketGuarded** | `0x5db927AB629d0304C312e65F3a66D88938012E52` | [Snowscan](https://testnet.snowscan.xyz/address/0x5db927AB629d0304C312e65F3a66D88938012E52) |
+| **LiquidityVaultGuarded** | `0x5883F591C2eD45DC82FF9a551B4A00939eb84e2B` | [Snowscan](https://testnet.snowscan.xyz/address/0x5883F591C2eD45DC82FF9a551B4A00939eb84e2B) |
+| **MarketHoursRiskPolicy** | `0x3BA8a766880fC8e8074EBCc3A23a2e67d3423871` | [Snowscan](https://testnet.snowscan.xyz/address/0x3BA8a766880fC8e8074EBCc3A23a2e67d3423871) |
+| **PerpMarketStandard** | `0xf8FEd93D1C351543195fB0D069ed31478Fc3C562` | [Snowscan](https://testnet.snowscan.xyz/address/0xf8FEd93D1C351543195fB0D069ed31478Fc3C562) |
+| **LiquidityVaultStandard** | `0xDD38265C1d66dCF067a24B1740895fDF5EA34f19` | [Snowscan](https://testnet.snowscan.xyz/address/0xDD38265C1d66dCF067a24B1740895fDF5EA34f19) |
+| **FlatRiskPolicy** | `0xeAe1e4E4531d1AAD7dCF6efB28aA42ecDCDF048F` | [Snowscan](https://testnet.snowscan.xyz/address/0xeAe1e4E4531d1AAD7dCF6efB28aA42ecDCDF048F) |
+| **MarketClock** | `0x5e050a5b66E128ceF2bD9bd0cc4f2b400136fc13` | [Snowscan](https://testnet.snowscan.xyz/address/0x5e050a5b66E128ceF2bD9bd0cc4f2b400136fc13) |
+| **MarketSchedule** | `0x57231418E1F58059Ef53aC8E364499264BA69aBF` | [Snowscan](https://testnet.snowscan.xyz/address/0x57231418E1F58059Ef53aC8E364499264BA69aBF) |
+| **MockPriceFeedGuarded** | `0x983Da40dB7B35A0Cac08f8De5fcf629520322C44` | [Snowscan](https://testnet.snowscan.xyz/address/0x983Da40dB7B35A0Cac08f8De5fcf629520322C44) |
+| **MockPriceFeedStandard** | `0x68Edd9Ae0DD51a56027Db8A67d3726a827D21634` | [Snowscan](https://testnet.snowscan.xyz/address/0x68Edd9Ae0DD51a56027Db8A67d3726a827D21634) |
+| **DemoUSDC** | `0x03933052aC03983e37a1C3E0c1cE9DD78787E4f2` | [Snowscan](https://testnet.snowscan.xyz/address/0x03933052aC03983e37a1C3E0c1cE9DD78787E4f2) |
 
 ---
 
@@ -111,12 +111,15 @@ The weekend-gap test scenario opens mirrored positions on both markets from an i
 | **Pre-Close Deleveraging** | None (100% exposed) | Automated at T-7.5m to 5.00x | Cut at fair Friday price |
 | **Monday Open Price** | $3,818.00 (-8.00%) | $3,818.00 (-8.00%) | Identical shock |
 | **Liquidations** | Underwater 20x long liquidated | **0 liquidations (Healthy)** | Collateral safely absorbed gap |
-| **Recorded Bad Debt** | **$16,287.02 USDx** | **$0.00 USDx** | **100% LP Solvency Preserved** |
+| **Loss Beyond Collateral (Bad Debt)** | **$7,487.26 USDx** | **$0.00 USDx** | **100% LP Solvency Preserved** |
 
-### Verified On-Chain Transaction Receipts
-- **Deleverage T1 to 5x:** [`0x086294bc68d94678015d8354a1b26e1256e034b403b988fa2f589c16b14a362b`](https://testnet.snowscan.xyz/tx/0x086294bc68d94678015d8354a1b26e1256e034b403b988fa2f589c16b14a362b)
-- **Monday Gap Shock (-800 bps):** [`0x9d39e817e2f5aae5869c5333977efa7634356d41dc462417a8e1611e43dc5362`](https://testnet.snowscan.xyz/tx/0x9d39e817e2f5aae5869c5333977efa7634356d41dc462417a8e1611e43dc5362)
-- **Standard Liquidation:** [`0xed882a5c3702338c518989ba4727d91eda0ac6458fa02fd43991aea32b90bdef`](https://testnet.snowscan.xyz/tx/0xed882a5c3702338c518989ba4727d91eda0ac6458fa02fd43991aea32b90bdef)
+### Verified On-Chain Transaction Receipts (Clean Single-Pass Run)
+- **Deleverage T1 to 5x (Guarded):** [`0x1328557928992ccf037dd282a9c8b5b959701a68d4061be6d58a57c5e157cf6f`](https://testnet.snowscan.xyz/tx/0x1328557928992ccf037dd282a9c8b5b959701a68d4061be6d58a57c5e157cf6f) (Block 59348817)
+- **Deleverage T2 to 5x (Guarded):** [`0x44d7914488f6ced8deb43ed3ebc5f598ac370fdff2b00859f3bad8b230cfab6b`](https://testnet.snowscan.xyz/tx/0x44d7914488f6ced8deb43ed3ebc5f598ac370fdff2b00859f3bad8b230cfab6b) (Block 59348820)
+- **Deleverage T3 to 5x (Guarded):** [`0x291e6408726d530afefea1245d094a00037b091219d1a57e442bd22d2f908660`](https://testnet.snowscan.xyz/tx/0x291e6408726d530afefea1245d094a00037b091219d1a57e442bd22d2f908660) (Block 59348822)
+- **Monday Gap Shock (-800 bps Standard):** [`0x8cb588905628bfdbe6cb933100bdc79edb88fa4a94674d7b423b72844543c92f`](https://testnet.snowscan.xyz/tx/0x8cb588905628bfdbe6cb933100bdc79edb88fa4a94674d7b423b72844543c92f) (Block 59348834)
+- **Monday Gap Shock (-800 bps Guarded):** [`0x0f0d4638ab9f457f53864118df92098debbccea6e4f9fbadcd4e40137afd4733`](https://testnet.snowscan.xyz/tx/0x0f0d4638ab9f457f53864118df92098debbccea6e4f9fbadcd4e40137afd4733) (Block 59348836)
+- **Standard Liquidation (T1):** [`0x234883ed75942a7cd7fa9b4c93ae9ffdbdc91e318d0492c2eb608bed890c5284`](https://testnet.snowscan.xyz/tx/0x234883ed75942a7cd7fa9b4c93ae9ffdbdc91e318d0492c2eb608bed890c5284) (Block 59348839)
 
 Full step-by-step mathematical reconciliation is documented in [`docs/RISK_MODEL.md`](docs/RISK_MODEL.md).
 
@@ -137,7 +140,7 @@ Full step-by-step mathematical reconciliation is documented in [`docs/RISK_MODEL
 cd contracts
 forge test
 ```
-All **100 tests pass** across 8 test suites (unit, scenario, and invariant tests).
+All **103 tests pass** across 8 test suites (unit, scenario, and invariant tests).
 
 ### Run Local Scenario Simulation
 ```bash
@@ -156,13 +159,12 @@ Open [http://localhost:3000](http://localhost:3000) to view the live dashboard c
 
 ## 10. AI Tools Disclosure
 
-<!-- AI TOOLS PLACEHOLDER: Fill in tools used during development -->
-[To be completed by author]
+Claude and Google Antigravity were utilized as pair-programming and architecture audit assistants during development for smart contract scaffolding, comprehensive test suite authoring, fixed-point math verification, and invariant debugging. All financial risk formulas, calendar algorithms, contract implementations, and economic safety invariants were independently audited, reviewed, verified on-chain, and validated by the author.
 
 ---
 
 ## 11. Test Count
 
 ```text
-Ran 8 test suites: 100 tests passed, 0 failed, 0 skipped (100 total tests)
+Ran 8 test suites: 103 tests passed, 0 failed, 0 skipped (103 total tests)
 ```

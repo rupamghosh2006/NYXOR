@@ -295,7 +295,7 @@ export default function Home() {
                     : "bg-slate-800/80 text-slate-400 hover:text-white"
                 }`}
               >
-                <span>Frozen Benchmark (Scenario Recorded — 9,446.42 Unbacked Loss)</span>
+                <span>Frozen Benchmark (Scenario Recorded — 7,487.26 USDx Loss Beyond Collateral)</span>
               </button>
               <button
                 onClick={() => setDeploymentInstance("demo")}
