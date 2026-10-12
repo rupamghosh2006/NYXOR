@@ -1,32 +1,37 @@
 /**
  * chains.ts — Runtime-configurable chain definitions for Nyxor Protocol.
  *
- * Active chain is selected by NEXT_PUBLIC_CHAIN env var ("fuji" | "l1").
- * This module intentionally has no hard-coded addresses; those live in contracts.ts.
- * Swap the env var (or add a chain toggle in the UI) to point the app at a different network.
+ * Uses public Fuji RPC endpoints with automatic viem fallback transport:
+ * 1. Primary: https://api.avax-test.network/ext/bc/C/rpc
+ * 2. Secondary public fallback: https://avalanche-fuji-c-chain-rpc.publicnode.com
+ *
+ * Both are public testnet endpoints; zero private keys or secrets are required or exposed.
  */
 
 import { type Chain, avalancheFuji } from "wagmi/chains";
 
-/** Public Fuji RPC, overridable via env to avoid rate-limiting. */
-export const FUJI_RPC =
-  process.env.NEXT_PUBLIC_FUJI_RPC_URL ||
-  "https://api.avax-test.network/ext/bc/C/rpc";
+/** Public Fuji RPC endpoints (primary + publicnode fallback) */
+export const FUJI_PUBLIC_RPCS = [
+  process.env.NEXT_PUBLIC_FUJI_RPC_URL || "https://api.avax-test.network/ext/bc/C/rpc",
+  "https://avalanche-fuji-c-chain-rpc.publicnode.com",
+];
+
+export const FUJI_RPC = FUJI_PUBLIC_RPCS[0];
 
 /** Explorer base URL, no trailing slash. */
 export const FUJI_EXPLORER =
   process.env.NEXT_PUBLIC_FUJI_EXPLORER || "https://testnet.snowscan.xyz";
 
-/** Custom Fuji chain definition that uses the configurable RPC. */
+/** Custom Fuji chain definition with fallback RPC list */
 export const fujiChain: Chain = {
   ...avalancheFuji,
   rpcUrls: {
-    default: { http: [FUJI_RPC] },
-    public: { http: [FUJI_RPC] },
+    default: { http: FUJI_PUBLIC_RPCS },
+    public: { http: FUJI_PUBLIC_RPCS },
   },
 };
 
-/** Nyxor L1 chain definition (stretch — populated via env after L1 deployment). */
+/** Nyxor L1 chain definition (populated via env after L1 deployment). */
 const l1ChainId = process.env.NEXT_PUBLIC_L1_CHAIN_ID
   ? parseInt(process.env.NEXT_PUBLIC_L1_CHAIN_ID, 10)
   : undefined;
@@ -52,23 +57,19 @@ export const l1Chain: Chain | undefined =
       }
     : undefined;
 
-/** Which chain is active right now based on env config. */
 export type ActiveChain = "fuji" | "l1";
 
 export const ACTIVE_CHAIN_NAME: ActiveChain =
   (process.env.NEXT_PUBLIC_CHAIN as ActiveChain) || "fuji";
 
-/** The active Chain object. Falls back to fuji if L1 env not set. */
 export const activeChain: Chain =
   ACTIVE_CHAIN_NAME === "l1" && l1Chain ? l1Chain : fujiChain;
 
 export const activeChainId = activeChain.id;
 
-/** Explorer for the active chain. */
 export const activeExplorer =
   ACTIVE_CHAIN_NAME === "l1" && l1Explorer ? l1Explorer : FUJI_EXPLORER;
 
-/** Supported chains array (always includes fuji; adds l1 if configured). */
 export const supportedChains: [Chain, ...Chain[]] = l1Chain
   ? [fujiChain, l1Chain]
   : [fujiChain];

@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertOctagon, CheckCircle2, ShieldCheck, Flame, ExternalLink, HelpCircle } from "lucide-react";
+import { AlertOctagon, ShieldCheck, ExternalLink, HelpCircle } from "lucide-react";
 import { formatUsdx, formatLeverage, formatPrice } from "../lib/format";
 import { CONTRACT_ADDRESSES } from "../config/contracts";
 
@@ -24,6 +24,7 @@ interface ComparisonPanelProps {
 export function ComparisonPanel({ standard, guarded, phase }: ComparisonPanelProps) {
   const standardBadDebtNum = standard.badDebtTotal ? Number(standard.badDebtTotal) / 1e6 : 0;
   const guardedBadDebtNum = guarded.badDebtTotal ? Number(guarded.badDebtTotal) / 1e6 : 0;
+  const scenarioExecuted = standardBadDebtNum > 0 || guardedBadDebtNum > 0;
 
   return (
     <div className="flex flex-col gap-4">
@@ -79,16 +80,16 @@ export function ComparisonPanel({ standard, guarded, phase }: ComparisonPanelPro
                 Recorded Bad Debt
               </span>
               <span className="font-mono text-[11px] text-rose-400 uppercase tracking-wider">
-                {standardBadDebtNum > 0 ? "INSOLVENCY EVENT" : "BASELINE"}
+                {scenarioExecuted ? "INSOLVENCY EVENT" : "SCENARIO PENDING"}
               </span>
             </div>
             <div className="text-2xl font-black font-mono text-rose-400">
-              {formatUsdx(standard.badDebtTotal)}
+              {scenarioExecuted ? formatUsdx(standard.badDebtTotal) : "Scenario not yet run"}
             </div>
             <p className="mt-1 text-[11px] text-rose-300/80 leading-relaxed">
-              {standardBadDebtNum > 0
+              {scenarioExecuted
                 ? "Weekend -8% gap blew past the 2.5% liquidation threshold. Collateral vanished; vault absorbed the shortfall."
-                : "Blind to market close. Leaves 20x positions unhedged over weekends."}
+                : "Awaiting deterministic weekend-gap run. In a gap event, unhedged 20x positions incur bad debt."}
             </p>
           </div>
 
@@ -111,7 +112,7 @@ export function ComparisonPanel({ standard, guarded, phase }: ComparisonPanelPro
             <div className="p-3 rounded-lg bg-slate-900/60 border border-slate-800/80">
               <span className="text-slate-400 text-[11px]">Leverage Cap</span>
               <div className="text-rose-400 font-semibold mt-0.5">
-                {formatLeverage(standard.maxLeverage)} (Unchanged)
+                {formatLeverage(standard.maxLeverage)} (Static)
               </div>
             </div>
 
@@ -172,14 +173,16 @@ export function ComparisonPanel({ standard, guarded, phase }: ComparisonPanelPro
                 Recorded Bad Debt
               </span>
               <span className="font-mono text-[11px] text-emerald-400 uppercase tracking-wider font-bold">
-                100% SOLVENT
+                {scenarioExecuted ? "100% SOLVENT" : "SCENARIO PENDING"}
               </span>
             </div>
             <div className="text-2xl font-black font-mono text-emerald-400">
-              {formatUsdx(guarded.badDebtTotal)}
+              {scenarioExecuted ? formatUsdx(guarded.badDebtTotal) : "Scenario not yet run"}
             </div>
             <p className="mt-1 text-[11px] text-violet-300/80 leading-relaxed">
-              Leverage cut to 5.0x at the fair Friday price before close. Position safely absorbed the -8% gap on Monday reopen with zero shortfall.
+              {scenarioExecuted
+                ? "Leverage cut to 5.0x before close at the Friday price. Position absorbed the -8% gap on Monday with zero shortfall."
+                : "Automatic pre-close deleveraging will reduce over-cap positions to 5x before market closure."}
             </p>
           </div>
 

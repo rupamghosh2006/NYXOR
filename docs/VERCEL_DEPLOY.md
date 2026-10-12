@@ -1,13 +1,13 @@
 # Hosting Nyxor Web App on Vercel
 
-## Prerequisites
-- Vercel CLI (`npm i -g vercel`) or Vercel dashboard
-- GitHub repo already pushed to `rupamghosh2006/NYXOR`
-- Optionally: a dedicated Fuji RPC endpoint (QuickNode, Infura, Alchemy — the public Fuji RPC rate-limits at ~50 req/s)
+## Overview
+The Nyxor Protocol web application connects to verified smart contracts on Avalanche Fuji C-Chain.
+- **Zero Secrets**: No private keys or private RPC tokens are needed or stored in environment variables.
+- **Fallback RPCs**: The frontend uses Viem's `fallback()` transport across multiple public Fuji RPC endpoints (`api.avax-test.network` and `avalanche-fuji-c-chain-rpc.publicnode.com`). If one endpoint is rate-limited, it automatically falls back to the secondary endpoint.
 
 ---
 
-## Step 1 — Connect the repo
+## Step 1 — Connect the repository
 
 1. Go to [vercel.com/new](https://vercel.com/new)
 2. Import the GitHub repo `rupamghosh2006/NYXOR`
@@ -16,101 +16,50 @@
 
 ---
 
-## Step 2 — Set environment variables in Vercel dashboard
+## Step 2 — Environment Variables in Vercel
 
-Navigate to **Project → Settings → Environment Variables** and add:
+Navigate to **Project → Settings → Environment Variables**:
 
-| Variable | Value | Required? |
+| Variable | Value | Description |
 |---|---|---|
-| `NEXT_PUBLIC_CHAIN` | `fuji` | Required |
-| `NEXT_PUBLIC_FUJI_RPC_URL` | `https://api.avax-test.network/ext/bc/C/rpc` | Required — use your dedicated RPC here |
-| `NEXT_PUBLIC_FUJI_EXPLORER` | `https://testnet.snowscan.xyz` | Required |
-| `NEXT_PUBLIC_L1_CHAIN_ID` | *(leave empty until L1 deployed)* | Optional |
-| `NEXT_PUBLIC_L1_RPC_URL` | *(leave empty until L1 deployed)* | Optional |
-| `NEXT_PUBLIC_L1_EXPLORER` | *(leave empty until L1 deployed)* | Optional |
-| `NEXT_PUBLIC_L1_CHAIN_NAME` | `Nyxor L1` | Optional |
-
-**Address overrides** (only needed if you redeploy contracts):
-
-| Variable | Description |
-|---|---|
-| `NEXT_PUBLIC_ADDR_DEMO_USDC` | Override DemoUSDC address |
-| `NEXT_PUBLIC_ADDR_MARKET_CLOCK` | Override MarketClock address |
-| `NEXT_PUBLIC_ADDR_MARKET_SCHEDULE` | Override MarketSchedule address |
-| `NEXT_PUBLIC_ADDR_PERP_MARKET_STANDARD` | Override PerpMarketStandard |
-| `NEXT_PUBLIC_ADDR_PERP_MARKET_GUARDED` | Override PerpMarketGuarded |
-| `NEXT_PUBLIC_ADDR_VAULT_STANDARD` | Override LiquidityVaultStandard |
-| `NEXT_PUBLIC_ADDR_VAULT_GUARDED` | Override LiquidityVaultGuarded |
-| `NEXT_PUBLIC_ADDR_FEED_STANDARD` | Override MockPriceFeedStandard |
-| `NEXT_PUBLIC_ADDR_FEED_GUARDED` | Override MockPriceFeedGuarded |
-| `NEXT_PUBLIC_ADDR_FLAT_RISK_POLICY` | Override FlatRiskPolicy |
-| `NEXT_PUBLIC_ADDR_MARKET_HOURS_RISK_POLICY` | Override MarketHoursRiskPolicy |
-| `NEXT_PUBLIC_ADDR_DEPLOYER` | Override deployer address (controls admin console lock) |
+| `NEXT_PUBLIC_CHAIN` | `fuji` | Active chain (`fuji` or `l1`) |
+| `NEXT_PUBLIC_FUJI_RPC_URL` | `https://api.avax-test.network/ext/bc/C/rpc` | Public Fuji RPC endpoint (fallback configured) |
+| `NEXT_PUBLIC_FUJI_EXPLORER` | `https://testnet.snowscan.xyz` | Explorer base URL |
 
 > [!NOTE]
-> If address overrides are not set, the build falls back to `deployments/fuji.json` at build time — the correct behaviour for the current deployment.
+> All `NEXT_PUBLIC_*` variables are client-facing in the browser bundle. **Never put private keys, API secrets, or authenticated RPC URLs with secret tokens in `NEXT_PUBLIC_*` variables.** The application is designed to function with public endpoints using Viem's automatic failover transport.
 
 ---
 
-## Step 3 — Build & deploy
+## Step 3 — Build & Deploy
 
-**Via Vercel dashboard:**
 Click **Deploy**. Vercel will run:
-```
+```bash
 pnpm install --frozen-lockfile
 pnpm --filter nyxor-web build
 ```
-Build output directory: `.next` (auto-detected by Vercel for Next.js)
-
-**Via CLI (alternative):**
-```bash
-cd apps/web
-vercel --prod
-```
-When prompted:
-- Link to existing project? Yes (if already created in dashboard) / No (creates new)
-- Root directory: `apps/web` if running from repo root
+Output directory is `.next` (auto-detected).
 
 ---
 
-## Step 4 — RPC Rate Limiting
+## Step 4 — Contract Addresses & Verification Links
 
-The public Fuji RPC (`api.avax-test.network`) rate-limits unauthenticated requests. The app polls contracts every 4s. Under active demo load you may see `429` errors.
-
-**Solution — use a dedicated RPC endpoint:**
-1. Sign up at [QuickNode](https://www.quicknode.com/) or [Infura](https://infura.io/) or [Alchemy](https://www.alchemy.com/)
-2. Create an Avalanche Fuji endpoint
-3. Set `NEXT_PUBLIC_FUJI_RPC_URL=<your-endpoint-url>` in Vercel
-
-The endpoint URL is already wired in `src/config/chains.ts`:
-```ts
-export const FUJI_RPC =
-  process.env.NEXT_PUBLIC_FUJI_RPC_URL ||
-  "https://api.avax-test.network/ext/bc/C/rpc";
-```
+Contract addresses are automatically imported from `deployments/fuji.json` at build time.
+Verified on Routescan / Snowscan:
+- `PerpMarketGuarded`: `0x400D575b8BE7a395fBF4BC8161A4A454605730C7`
+- `LiquidityVaultGuarded`: `0x648b16f94C1ff3776368d8Bc067b5F8881ce6Cfd`
+- `PerpMarketStandard`: `0x2268c8cB67e1cd78Ca4Ab254894BB5F5D1E23Fab`
+- `LiquidityVaultStandard`: `0x4c38297282959b86482b10d59210c3f2df84B659`
 
 ---
 
-## Step 5 — Switch to Nyxor L1 later
+## Step 5 — Nyxor L1 Switch (Future / Day 6)
 
-Once the L1 is deployed, redeploy contracts there and set:
-```
+When deploying to the Nyxor Subnet L1, configure:
+```env
 NEXT_PUBLIC_CHAIN=l1
-NEXT_PUBLIC_L1_CHAIN_ID=<l1-chain-id>
-NEXT_PUBLIC_L1_RPC_URL=<l1-rpc>
-NEXT_PUBLIC_L1_EXPLORER=<l1-explorer>
-NEXT_PUBLIC_ADDR_PERP_MARKET_GUARDED=<l1-address>
-# ... all other addresses
+NEXT_PUBLIC_L1_CHAIN_ID=<l1_chain_id>
+NEXT_PUBLIC_L1_RPC_URL=<l1_public_rpc>
+NEXT_PUBLIC_L1_EXPLORER=<l1_explorer_url>
 ```
-
-Redeploy on Vercel → the same frontend now targets the L1. No code changes needed.
-
----
-
-## Checklist before going live
-
-- [ ] `NEXT_PUBLIC_FUJI_RPC_URL` is a dedicated endpoint (not the public one)
-- [ ] All `NEXT_PUBLIC_ADDR_*` variables are unset (use fuji.json defaults) or correctly overridden
-- [ ] No secrets (`PRIVATE_KEY`, mnemonics, `.env`) committed to the repo
-- [ ] Demo banner confirms simulated clock/oracle is displayed
-- [ ] `badDebtTotal()` on the vault shows live values (check Snowscan or the Deployment Record section)
+The UI will automatically update the active chain, network pill, and RPC transport.
