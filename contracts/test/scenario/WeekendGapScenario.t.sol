@@ -172,9 +172,9 @@ contract WeekendGapScenarioTest is Test {
         marketStandard.openPosition(true, 5_000 * 1e6, 2000);
         assertTrue(marketStandard.getPosition(t6).active);
 
-        // Guarded: rejected with ExcessiveLeverage (max leverage is ramped down to ~12.5x)
+        // Guarded: rejected with ExcessiveLeverage (max leverage ramped down to 12.50x = 1250)
         vm.prank(t6);
-        vm.expectRevert();
+        vm.expectRevert(abi.encodeWithSelector(PerpMarket.ExcessiveLeverage.selector, 2000, 1250));
         marketGuarded.openPosition(true, 5_000 * 1e6, 2000);
         assertFalse(marketGuarded.getPosition(t6).active);
 
@@ -190,17 +190,23 @@ contract WeekendGapScenarioTest is Test {
         feedGuarded.setPrice(INITIAL_PRICE);
         vm.stopPrank();
 
-        // Keeper deleverages Guarded positions above 5x to 5x (T1, T2, T5)
+        // Keeper deleverages all Guarded positions above 5x to 5x (T1, T2, T3, T4, T5)
         vm.prank(keeper);
         marketGuarded.deleverageToCap(t1);
         vm.prank(keeper);
         marketGuarded.deleverageToCap(t2);
         vm.prank(keeper);
+        marketGuarded.deleverageToCap(t3);
+        vm.prank(keeper);
+        marketGuarded.deleverageToCap(t4);
+        vm.prank(keeper);
         marketGuarded.deleverageToCap(t5);
 
-        // Verify Guarded positions are safely cut to 5x leverage
+        // Verify Guarded positions are safely cut to <= 5x leverage
         assertLe(marketGuarded.getLeverage(t1), 500);
         assertLe(marketGuarded.getLeverage(t2), 500);
+        assertLe(marketGuarded.getLeverage(t3), 500);
+        assertLe(marketGuarded.getLeverage(t4), 500);
         assertLe(marketGuarded.getLeverage(t5), 500);
 
         // Standard market does no deleveraging — high leverage remains exposed!
@@ -220,8 +226,7 @@ contract WeekendGapScenarioTest is Test {
         // ─────────────────────────────────────────────────────────────────────
         // Step 5: Monday Reopen with -8% Gap Shock (4,150 -> 3,818 USD)
         // ─────────────────────────────────────────────────────────────────────
-        // Jump to Monday morning (14:30 UTC)
-        uint256 monOpen = FRI_OPEN + 3 * 86_400; // Monday 14:30 UTC = 1792420200
+        uint256 monOpen = FRI_OPEN + 3 * 86_400; // Monday 14:30 UTC
         vm.prank(admin);
         clock.setDemoOffset(int256(monOpen) - int256(block.timestamp));
 
@@ -237,24 +242,119 @@ contract WeekendGapScenarioTest is Test {
         assertEq(shockedPriceGuarded, 3818 * 1e8);
 
         // ─────────────────────────────────────────────────────────────────────
-        // Step 6: Liquidations & Outcome Assertions
+        // Step 6: Liquidations & Outcome Assertions (-8% Gap)
         // ─────────────────────────────────────────────────────────────────────
         // Liquidate underwater long positions on Standard
-        // T1 on Standard was 20x long: 8% drop = 160% loss of collateral -> BAD DEBT!
+        // T1: 200k notional, 10k margin -> loss 16,000 -> deficit 6,000
+        // T2: 100k notional, 5k margin -> loss 8,000 -> deficit 3,000
+        // T5: 60k notional, 4k margin -> loss 4,800 -> deficit 800
+        // T6: 100k notional, 5k margin -> loss 8,000 -> deficit 3,000
         vm.prank(keeper);
         marketStandard.liquidate(t1);
         vm.prank(keeper);
         marketStandard.liquidate(t2);
+        vm.prank(keeper);
+        marketStandard.liquidate(t5);
+        vm.prank(keeper);
+        marketStandard.liquidate(t6);
 
-        // On Standard: BAD DEBT HAS ACCUMULATED
-        assertGt(vaultStandard.badDebtTotal(), 0, "Standard market must accumulate bad debt on -8% gap");
+        // On Standard: Total deficit = 6000 + 3000 + 800 + 3000 = 12,800 USDC
+        // Plus keeper rewards & insurance penalties
+        uint256 stdBadDebt = vaultStandard.badDebtTotal();
+        assertGt(stdBadDebt, 10_000 * 1e6, "Standard market must accumulate > 10k bad debt");
 
         // On Guarded: Positions were capped at 5x. An 8% drop is only a 40% loss of collateral!
-        // Trader equity is still positive (~60% remaining)
-        assertGt(marketGuarded.getEquity(t1), 0, "Guarded T1 equity must remain positive after -8% gap");
-        assertGt(marketGuarded.getEquity(t2), 0, "Guarded T2 equity must remain positive after -8% gap");
+        // All positions remain healthy (> 6% maintenance margin)
+        vm.prank(keeper);
+        vm.expectRevert(PerpMarket.PositionHealthy.selector);
+        marketGuarded.liquidate(t1);
 
-        // ZERO BAD DEBT on Guarded market
+        vm.prank(keeper);
+        vm.expectRevert(PerpMarket.PositionHealthy.selector);
+        marketGuarded.liquidate(t2);
+
+        vm.prank(keeper);
+        vm.expectRevert(PerpMarket.PositionHealthy.selector);
+        marketGuarded.liquidate(t5);
+
+        // Zero liquidations and ZERO BAD DEBT on Guarded market
         assertEq(vaultGuarded.badDebtTotal(), 0, "Guarded market must have ZERO bad debt on -8% gap");
+    }
+
+    /// @notice Demonstrates severe shock scenario (-25% gap shock):
+    ///         Honest limitation: 5x leverage absorbs up to 20% gap without bad debt.
+    ///         At -25%, Guarded accumulates bad debt, but vastly less than Standard.
+    function test_weekend_gap_scenario_severeShockMinus25Percent() public {
+        // Step 1: Open mirror positions
+        vm.prank(t1);
+        marketStandard.openPosition(true, 10_000 * 1e6, 2000);
+        vm.prank(t1);
+        marketGuarded.openPosition(true, 10_000 * 1e6, 2000);
+
+        vm.prank(t2);
+        marketStandard.openPosition(true, 5_000 * 1e6, 2000);
+        vm.prank(t2);
+        marketGuarded.openPosition(true, 5_000 * 1e6, 2000);
+
+        vm.prank(t5);
+        marketStandard.openPosition(true, 4_000 * 1e6, 1500);
+        vm.prank(t5);
+        marketGuarded.openPosition(true, 4_000 * 1e6, 1500);
+
+        // Step 2: PRE_CLOSE keeper deleveraging on Guarded
+        vm.prank(admin);
+        clock.setDemoOffset(int256(FRI_CLOSE - 300) - int256(block.timestamp));
+        vm.startPrank(admin);
+        feedStandard.setPrice(INITIAL_PRICE);
+        feedGuarded.setPrice(INITIAL_PRICE);
+        vm.stopPrank();
+
+        vm.prank(keeper);
+        marketGuarded.deleverageToCap(t1);
+        vm.prank(keeper);
+        marketGuarded.deleverageToCap(t2);
+        vm.prank(keeper);
+        marketGuarded.deleverageToCap(t5);
+
+        // Step 3: CLOSED checkpoint
+        vm.prank(admin);
+        clock.setDemoOffset(int256(FRI_CLOSE + 3600) - int256(block.timestamp));
+        feedStandard.checkpointClose();
+        feedGuarded.checkpointClose();
+
+        // Step 4: Monday Reopen with -25% severe shock
+        uint256 monOpen = FRI_OPEN + 3 * 86_400;
+        vm.prank(admin);
+        clock.setDemoOffset(int256(monOpen) - int256(block.timestamp));
+
+        vm.prank(admin);
+        feedStandard.queueShock(-2500);
+        vm.prank(admin);
+        feedGuarded.queueShock(-2500);
+
+        // Step 5: Liquidate on both markets
+        vm.prank(keeper);
+        marketStandard.liquidate(t1);
+        vm.prank(keeper);
+        marketStandard.liquidate(t2);
+        vm.prank(keeper);
+        marketStandard.liquidate(t5);
+
+        vm.prank(keeper);
+        marketGuarded.liquidate(t1);
+        vm.prank(keeper);
+        marketGuarded.liquidate(t2);
+        vm.prank(keeper);
+        marketGuarded.liquidate(t5);
+
+        uint256 stdBadDebt = vaultStandard.badDebtTotal();
+        uint256 guardedBadDebt = vaultGuarded.badDebtTotal();
+
+        // Standard bad debt is catastrophic (> 60,000 USDC)
+        assertGt(stdBadDebt, 60_000 * 1e6, "Standard bad debt should be catastrophic");
+        // Guarded accumulates bad debt because -25% exceeds the 20% tolerance of 5x leverage
+        assertGt(guardedBadDebt, 0, "Guarded takes bad debt at -25% shock");
+        // Guarded bad debt is dramatically lower than Standard (< 25% of Standard bad debt)
+        assertLt(guardedBadDebt, stdBadDebt / 4, "Guarded bad debt must be < 25% of Standard bad debt");
     }
 }
