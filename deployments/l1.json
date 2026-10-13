@@ -1,0 +1,16 @@
+{
+  "DemoUSDC": "0x5B5F45D62814c6811C8cACA1Df399a8C466605a5",
+  "Deployer": "0x4AD14e89622A046803988213E4a9846756531086",
+  "FlatRiskPolicy": "0x2b81243b48e350A0b3fDADe39ed0A9915774527A",
+  "LiquidityVaultGuarded": "0xFcDF1982f8B8A60dabb4A4FA1c05f5253f59cC55",
+  "LiquidityVaultStandard": "0x475A0B97B0919DB4507f7c50EFAA7041722fC067",
+  "MarketClock": "0x10ACA778A701dD95D77960f173Dc4fF720a989A0",
+  "MarketHoursRiskPolicy": "0x1e4ba8455a5FD16e775910aE3852E931f2e0178C",
+  "MarketSchedule": "0x1C41acc9762E0afB787B65B4854dFC5eA328F800",
+  "MockPriceFeedGuarded": "0x4a98A470254D12B47006f0252eA86EC47c56B729",
+  "MockPriceFeedStandard": "0x70F58832E010cDd99105835C9db6b1C471dE6Fc6",
+  "PerpMarketGuarded": "0xaB91Bd2fCaF06f658510bad6086eF4E18525E1A5",
+  "PerpMarketStandard": "0xAcdf5B728BC2eE91708B22A89E02902043D7a8d4",
+  "_comment": "Nyxor Protocol Sovereign L1 live deployment on Avalanche Fuji Subnet (Chain ID 98421)",
+  "chainId": 98421
+}

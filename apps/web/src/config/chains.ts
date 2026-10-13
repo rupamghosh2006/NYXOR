@@ -31,31 +31,31 @@ export const fujiChain: Chain = {
   },
 };
 
-/** Nyxor L1 chain definition (populated via env after L1 deployment). */
+/** Nyxor L1 chain definition (populated via env or default to live sovereign L1). */
 const l1ChainId = process.env.NEXT_PUBLIC_L1_CHAIN_ID
   ? parseInt(process.env.NEXT_PUBLIC_L1_CHAIN_ID, 10)
-  : undefined;
+  : 98421;
 
-const l1RpcUrl = process.env.NEXT_PUBLIC_L1_RPC_URL;
-const l1Explorer = process.env.NEXT_PUBLIC_L1_EXPLORER;
+const l1RpcUrl =
+  process.env.NEXT_PUBLIC_L1_RPC_URL ||
+  "https://nodes-prod.43.207.73.245.sslip.io/ext/bc/2SrgwcLrpgt2kLrqhTr6fMaPFd1kN467ai3eaK4HcFyBq1YbaY/rpc";
+const l1Explorer =
+  process.env.NEXT_PUBLIC_L1_EXPLORER || "https://explorer-test.avax.network";
 const l1Name = process.env.NEXT_PUBLIC_L1_CHAIN_NAME || "Nyxor L1";
 
-export const l1Chain: Chain | undefined =
-  l1ChainId && l1RpcUrl
-    ? {
-        id: l1ChainId,
-        name: l1Name,
-        nativeCurrency: { name: "AVAX", symbol: "AVAX", decimals: 18 },
-        rpcUrls: {
-          default: { http: [l1RpcUrl] },
-          public: { http: [l1RpcUrl] },
-        },
-        blockExplorers: l1Explorer
-          ? { default: { name: "Explorer", url: l1Explorer } }
-          : undefined,
-        testnet: true,
-      }
-    : undefined;
+export const l1Chain: Chain = {
+  id: l1ChainId,
+  name: l1Name,
+  nativeCurrency: { name: "NYX", symbol: "NYX", decimals: 18 },
+  rpcUrls: {
+    default: { http: [l1RpcUrl] },
+    public: { http: [l1RpcUrl] },
+  },
+  blockExplorers: {
+    default: { name: "Explorer", url: l1Explorer },
+  },
+  testnet: true,
+};
 
 export type ActiveChain = "fuji" | "l1";
 
@@ -63,13 +63,11 @@ export const ACTIVE_CHAIN_NAME: ActiveChain =
   (process.env.NEXT_PUBLIC_CHAIN as ActiveChain) || "fuji";
 
 export const activeChain: Chain =
-  ACTIVE_CHAIN_NAME === "l1" && l1Chain ? l1Chain : fujiChain;
+  ACTIVE_CHAIN_NAME === "l1" ? l1Chain : fujiChain;
 
 export const activeChainId = activeChain.id;
 
 export const activeExplorer =
-  ACTIVE_CHAIN_NAME === "l1" && l1Explorer ? l1Explorer : FUJI_EXPLORER;
+  ACTIVE_CHAIN_NAME === "l1" ? l1Explorer : FUJI_EXPLORER;
 
-export const supportedChains: [Chain, ...Chain[]] = l1Chain
-  ? [fujiChain, l1Chain]
-  : [fujiChain];
+export const supportedChains: [Chain, ...Chain[]] = [fujiChain, l1Chain];

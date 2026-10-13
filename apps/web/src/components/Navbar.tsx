@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { ExternalLink, Wallet, Layers, ArrowUpRight, Menu, X } from "lucide-react";
+import { ExternalLink, Wallet, Layers, ArrowUpRight, ArrowLeftRight, Menu, X } from "lucide-react";
 import { useAccount, useConnect, useDisconnect, useSwitchChain } from "wagmi";
 import { activeChainId, ACTIVE_CHAIN_NAME } from "../config/chains";
 import { CONTRACT_ADDRESSES, EXPLORER_BASE } from "../config/contracts";
@@ -16,10 +16,11 @@ export function Navbar() {
   const { disconnect } = useDisconnect();
   const { switchChain } = useSwitchChain();
 
+  const isL1 = chainId === 98421 || (chainId === undefined && ACTIVE_CHAIN_NAME === "l1");
   const isWrongChain = isConnected && chainId !== activeChainId;
-  const chainLabel = ACTIVE_CHAIN_NAME === "l1" ? "Nyxor L1" : "Fuji C-Chain";
+  const chainLabel = isL1 ? "Nyxor L1" : "Fuji C-Chain";
   const chainPillClass =
-    ACTIVE_CHAIN_NAME === "l1"
+    isL1
       ? "border-violet-400/40 bg-violet-400/10 text-violet-200"
       : "border-cyan-300/40 bg-cyan-300/10 text-cyan-100";
 
@@ -48,10 +49,23 @@ export function Navbar() {
           <Link className="transition-colors hover:text-white" href="/risk">Risk engine</Link>
           <Link className="transition-colors hover:text-white" href="/evidence">Evidence</Link>
           <Link className="transition-colors hover:text-white" href="/trade">Trade</Link>
+          <Link className="transition-colors hover:text-white" href="/bridge">Bridge</Link>
+          <Link className="transition-colors hover:text-white" href="/compliance">Compliance</Link>
           <Link className="transition-colors hover:text-white" href="/demo">Demo</Link>
         </nav>
 
         <div className="flex items-center gap-2 shrink-0">
+          {isConnected && (
+            <button
+              onClick={() => switchChain({ chainId: isL1 ? 43113 : 98421 })}
+              className="hidden sm:flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-[10px] text-neutral-300 hover:border-white/30 hover:text-white transition"
+              title={`Switch network to ${isL1 ? "Fuji C-Chain" : "Nyxor L1"}`}
+            >
+              <span>{isL1 ? "Switch to Fuji" : "Switch to L1"}</span>
+              <ArrowLeftRight className="h-3 w-3 text-[#d8ff3f]" />
+            </button>
+          )}
+
           <a
             href={`${EXPLORER_BASE}/address/${CONTRACT_ADDRESSES.PerpMarketGuarded}`}
             target="_blank"
@@ -112,6 +126,8 @@ export function Navbar() {
               ["Risk engine", "/risk"],
               ["Evidence", "/evidence"],
               ["Trade", "/trade"],
+              ["Bridge", "/bridge"],
+              ["Compliance", "/compliance"],
               ["Demo", "/demo"],
             ].map(([label, href]) => (
               <Link

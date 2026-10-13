@@ -28,6 +28,7 @@ interface TradingPanelProps {
   usdcAllowance: bigint | undefined;
   userPosition: PositionData | null;
   onRefresh: () => void;
+  addresses?: Record<string, `0x${string}`>;
 }
 
 export function TradingPanel({
@@ -40,6 +41,7 @@ export function TradingPanel({
   usdcAllowance = 0n,
   userPosition,
   onRefresh,
+  addresses,
 }: TradingPanelProps) {
   const { address, isConnected } = useAccount();
   const [isLong, setIsLong] = useState(true);
@@ -51,10 +53,11 @@ export function TradingPanel({
   const [isTxPending, setIsTxPending] = useState(false);
   const [txMessage, setTxMessage] = useState<string | null>(null);
 
+  const resolvedAddresses = addresses || CONTRACT_ADDRESSES;
   const marketAddress =
     selectedMarket === "guarded"
-      ? CONTRACT_ADDRESSES.PerpMarketGuarded
-      : CONTRACT_ADDRESSES.PerpMarketStandard;
+      ? resolvedAddresses.PerpMarketGuarded
+      : resolvedAddresses.PerpMarketStandard;
 
   const maxLevFloat = Number(maxLeverage) / 100;
   const currentLevFloat = Math.min(Number(leverageInput) || 1, maxLevFloat);
@@ -72,7 +75,7 @@ export function TradingPanel({
       setIsTxPending(true);
       setTxMessage("Minting 5,000 test USDx...");
       const hash = await writeContractAsync({
-        address: CONTRACT_ADDRESSES.DemoUSDC,
+        address: resolvedAddresses.DemoUSDC,
         abi: ERC20_ABI,
         functionName: "mint",
         args: [address, parseUnits("5000", 6)],
@@ -95,7 +98,7 @@ export function TradingPanel({
       setIsTxPending(true);
       setTxMessage("Approving USDx collateral...");
       const hash = await writeContractAsync({
-        address: CONTRACT_ADDRESSES.DemoUSDC,
+        address: resolvedAddresses.DemoUSDC,
         abi: ERC20_ABI,
         functionName: "approve",
         args: [marketAddress, maxUint256],

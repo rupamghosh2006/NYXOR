@@ -211,3 +211,13 @@ For the L1 if pursued. Assumed from subnet-evm docs:
 6. **Cross-Chain Proof:** Emitted cross-chain message `4820` from Nyxor L1 to Avalanche Fuji C-Chain (`0x65ed8b74f1bb021fef5c509b996a161fbd382039196b78fb551b8c6c78853095`).
 7. **Dual-Anchor Strategy Preserved:** Fuji C-Chain remains the permanent frozen solvency benchmark (`deployments/fuji-benchmark.json`); Nyxor L1 operates as the sovereign compliance and ICM showcase.
 
+---
+
+## 2026-10-13 — Sovereign L1 Feature Suite: Bridge, Compliance Precompiles & Live Trading
+
+**Decision:** With Nyxor Sovereign L1 (Chain ID: 98421) live and validating, activated the full suite of previously paused protocol features:
+1. **On-Chain L1 Protocol Deployment:** Deployed `DemoUSDC`, `MarketClock`, `MarketSchedule`, `MockPriceFeed`, `FlatRiskPolicy`, `MarketHoursRiskPolicy`, `LiquidityVault`, and `PerpMarket` directly to Nyxor L1 using `DeployL1.s.sol`. Seeded initial vault liquidity (500,000 USDx) with native `NYX` gas. Saved metadata to `deployments/l1.json` and `apps/web/src/deployments/l1.json`.
+2. **Interchain Messaging Bridge Page (`/bridge`):** Built a dedicated Avalanche Warp Messaging (AWM) and Teleporter route portal displaying bidirectional message flow between Fuji C-Chain (`43113`) and Nyxor L1 (`98421`), hosted relayer status, verified on-chain cross-chain transaction proof (`0x65ed8b74f1bb021fef5c509b996a161fbd382039196b78fb551b8c6c78853095`), and an interactive collateral bridge simulator.
+3. **Institutional Compliance Portal (`/compliance`):** Built a real-time clearance interface interacting with the `TxAllowList` stateful precompile (`0x0200000000000000000000000000000000000002`). Allows users to inspect their institutional tier (`Role 0: Restricted`, `Role 1: Enabled`, `Role 2: Admin`) and lets the administrator grant trading clearance on-chain.
+4. **Dynamic Multi-Chain Trading Console:** Extended `Navbar`, `LiveMarketConsole`, and `TradingPanel` with multi-chain awareness. Users can seamlessly toggle between **Frozen Benchmark (Fuji)**, **Fresh Demo (Fuji)**, and **Nyxor L1 (98421)**, with automatic contract resolution and wallet network switching.
+

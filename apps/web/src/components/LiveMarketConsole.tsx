@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useAccount, useReadContracts } from "wagmi";
-import { Database, Sparkles } from "lucide-react";
+import { Database, Sparkles, Layers } from "lucide-react";
 import {
   getAddressesForInstance,
   type DeploymentInstance,
@@ -33,9 +33,11 @@ interface PositionData {
 }
 
 export function LiveMarketConsole({ view }: { view: ConsoleView }) {
-  const { address } = useAccount();
+  const { address, chainId } = useAccount();
   const [selectedMarket, setSelectedMarket] = useState<"guarded" | "standard">("guarded");
-  const [deploymentInstance, setDeploymentInstance] = useState<DeploymentInstance>("benchmark");
+  const [deploymentInstance, setDeploymentInstance] = useState<DeploymentInstance>(
+    chainId === 98421 ? "l1" : "benchmark"
+  );
   const addresses = getAddressesForInstance(deploymentInstance);
 
   const { data: coreData, refetch: refetchCore } = useReadContracts({
@@ -143,6 +145,12 @@ export function LiveMarketConsole({ view }: { view: ConsoleView }) {
           >
             <Sparkles className="h-3.5 w-3.5" /> Fresh demo
           </button>
+          <button
+            onClick={() => setDeploymentInstance("l1")}
+            className={`flex items-center gap-1.5 rounded-full border px-3 py-2 mono-numbers transition-all ${deploymentInstance === "l1" ? "border-violet-400 bg-violet-400 font-bold text-black" : "border-white/10 bg-white/[0.03] text-neutral-500 hover:border-white/30 hover:text-white"}`}
+          >
+            <Layers className="h-3.5 w-3.5" /> Nyxor L1 (98421)
+          </button>
         </div>
       </div>
 
@@ -193,6 +201,7 @@ export function LiveMarketConsole({ view }: { view: ConsoleView }) {
           usdcAllowance={userData?.[1]?.result as bigint | undefined}
           userPosition={userPosition}
           onRefresh={handleRefreshAll}
+          addresses={addresses}
         />
       )}
 

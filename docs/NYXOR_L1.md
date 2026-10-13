@@ -68,6 +68,21 @@ Nyxor L1 operates on Proof of Authority (PoA) consensus managed by on-chain vali
   * Bidirectional monitoring: `Nyxor L1 (98421)` $\longleftrightarrow$ `Avalanche Fuji C-Chain (43113)`.
   * Gas Funded: `1.0000 NYX` on Nyxor L1 and `0.1000 AVAX` on Fuji C-Chain.
 
+### D. Deployed Nyxor Protocol Suite (On Nyxor L1)
+| Contract | Address | Description |
+|---|---|---|
+| **`DemoUSDC`** | `0x400D575b8BE7a395fBF4BC8161A4A454605730C7` | L1 test margin asset (`USDx`) |
+| **`MarketClock`** | `0x9702513f37EC899e21126A80F2AC94bBA9839084` | L1 simulated market time engine |
+| **`MarketSchedule`** | `0x0118DF8b09e771ba81EbB8EFE40dB54c0c64355D` | Weekend equity market schedule |
+| **`MockPriceFeedStandard`** | `0xB327745d1E019AB373C4901C5cae0334411093b8` | Unmanaged oracle price feed |
+| **`MockPriceFeedGuarded`** | `0xf0Bae412d7915D4Dd961303aA99e528233d22d8a` | Pre-close check-pointing price feed |
+| **`FlatRiskPolicy`** | `0x3C25146E0ebd05C521c3216d530d4A63455769f9` | 20x unmanaged flat risk policy |
+| **`MarketHoursRiskPolicy`** | `0x7552437ac5b5A7f4B464F70FA3df880F13D05fe8` | Dynamic market-hours risk policy |
+| **`LiquidityVaultStandard`** | `0x459B6F740FBAcED4A8955FD7f724DaB77aCbC798` | Standard LP vault (seeded with 500k USDx) |
+| **`LiquidityVaultGuarded`** | `0x5c844Fd4681DB6E8648a382d17cedB3E0e441218` | Guarded LP vault (seeded with 500k USDx) |
+| **`PerpMarketStandard`** | `0x180bb88cc7F1Fb69Ae6E3A02fFeC82481322995a` | Standard perpetual futures market |
+| **`PerpMarketGuarded`** | `0xaE9FbdE08Aa7F4f03C409319eA78749ed0390749` | Guarded perpetual futures market |
+
 ---
 
 ## 5. Verified Transaction Hashes & On-Chain Proofs

@@ -8,12 +8,14 @@
  */
 import benchmarkDeployments from "../deployments/fuji-benchmark.json";
 import demoDeployments from "../deployments/demo-latest.json";
-import { activeChainId, activeExplorer } from "./chains";
+import l1Deployments from "../deployments/l1.json";
+import { activeChainId, activeExplorer, ACTIVE_CHAIN_NAME } from "./chains";
 
 export const FUJI_CHAIN_ID = 43113;
+export const L1_CHAIN_ID = 98421;
 export { activeChainId as ACTIVE_CHAIN_ID, activeExplorer as EXPLORER_BASE };
 
-export type DeploymentInstance = "benchmark" | "demo";
+export type DeploymentInstance = "benchmark" | "demo" | "l1";
 
 function getDeploymentAddresses(deployments: Record<string, any>) {
   return {
@@ -34,12 +36,61 @@ function getDeploymentAddresses(deployments: Record<string, any>) {
 
 export const BENCHMARK_CONTRACT_ADDRESSES = getDeploymentAddresses(benchmarkDeployments);
 export const DEMO_CONTRACT_ADDRESSES = getDeploymentAddresses(demoDeployments);
+export const L1_CONTRACT_ADDRESSES = getDeploymentAddresses(l1Deployments);
 
 export function getAddressesForInstance(instance: DeploymentInstance) {
+  if (instance === "l1") return L1_CONTRACT_ADDRESSES;
   return instance === "demo" ? DEMO_CONTRACT_ADDRESSES : BENCHMARK_CONTRACT_ADDRESSES;
 }
 
-export const CONTRACT_ADDRESSES = BENCHMARK_CONTRACT_ADDRESSES;
+export function getAddressesForChain(chainId?: number) {
+  if (chainId === L1_CHAIN_ID || ACTIVE_CHAIN_NAME === "l1") {
+    return L1_CONTRACT_ADDRESSES;
+  }
+  return BENCHMARK_CONTRACT_ADDRESSES;
+}
+
+export const CONTRACT_ADDRESSES =
+  ACTIVE_CHAIN_NAME === "l1" ? L1_CONTRACT_ADDRESSES : BENCHMARK_CONTRACT_ADDRESSES;
+
+/** Stateful TxAllowList Precompile on Nyxor L1 */
+export const TX_ALLOW_LIST_ADDRESS = "0x0200000000000000000000000000000000000002" as const;
+
+/** Interchain Messaging & Relayer Constants */
+export const TELEPORTER_MESSENGER_ADDRESS = "0x253b2784c75e610dD0FF1da844684a1aC0aa5fcf" as const;
+export const ICM_RELAYER_ADDRESS = "0x40e8484138998f777Be39DB3Baa8Ba425D5a882F" as const;
+export const VERIFIED_ICM_TX_HASH = "0x65ed8b74f1bb021fef5c509b996a161fbd382039196b78fb551b8c6c78853095" as const;
+
+export const TX_ALLOW_LIST_ABI = [
+  {
+    type: "function",
+    name: "readAllowList",
+    inputs: [{ name: "addr", type: "address" }],
+    outputs: [{ name: "role", type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "setEnabled",
+    inputs: [{ name: "addr", type: "address" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "setAdmin",
+    inputs: [{ name: "addr", type: "address" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "setNone",
+    inputs: [{ name: "addr", type: "address" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+] as const;
 
 export const DEPLOYMENT_METADATA = {
   status: (benchmarkDeployments as any).status || "frozen_benchmark",
