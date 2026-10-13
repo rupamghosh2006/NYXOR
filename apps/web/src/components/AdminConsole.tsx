@@ -14,12 +14,15 @@ import { shortenAddress } from "../lib/format";
 interface AdminConsoleProps {
   isAdmin: boolean;
   onRefresh: () => void;
+  addresses?: Record<string, `0x${string}`>;
 }
 
-export function AdminConsole({ isAdmin, onRefresh }: AdminConsoleProps) {
+export function AdminConsole({ isAdmin, onRefresh, addresses }: AdminConsoleProps) {
   const { address } = useAccount();
   const publicClient = usePublicClient();
   const { writeContractAsync } = useWriteContract();
+
+  const resolvedAddresses = addresses || CONTRACT_ADDRESSES;
 
   const [isTxPending, setIsTxPending] = useState(false);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
@@ -37,7 +40,7 @@ export function AdminConsole({ isAdmin, onRefresh }: AdminConsoleProps) {
 
       setStatusMsg(`Setting clock offset (${neededOffset > 0n ? "+" : ""}${neededOffset}s)...`);
       const hash = await writeContractAsync({
-        address: CONTRACT_ADDRESSES.MarketClock,
+        address: resolvedAddresses.MarketClock,
         abi: MARKET_CLOCK_ABI,
         functionName: "setDemoOffset",
         args: [neededOffset],
@@ -60,7 +63,7 @@ export function AdminConsole({ isAdmin, onRefresh }: AdminConsoleProps) {
       setIsTxPending(true);
       setStatusMsg(`Advancing clock by ${seconds}s...`);
       const hash = await writeContractAsync({
-        address: CONTRACT_ADDRESSES.MarketClock,
+        address: resolvedAddresses.MarketClock,
         abi: MARKET_CLOCK_ABI,
         functionName: "advance",
         args: [BigInt(seconds)],
@@ -83,14 +86,14 @@ export function AdminConsole({ isAdmin, onRefresh }: AdminConsoleProps) {
       setIsTxPending(true);
       setStatusMsg(`Applying ${bps / 100}% shock to Guarded feed...`);
       const h1 = await writeContractAsync({
-        address: CONTRACT_ADDRESSES.MockPriceFeedGuarded,
+        address: resolvedAddresses.MockPriceFeedGuarded,
         abi: PRICE_FEED_ABI,
         functionName: "queueShock",
         args: [BigInt(bps)],
       });
       setStatusMsg(`Applying ${bps / 100}% shock to Standard feed...`);
       await writeContractAsync({
-        address: CONTRACT_ADDRESSES.MockPriceFeedStandard,
+        address: resolvedAddresses.MockPriceFeedStandard,
         abi: PRICE_FEED_ABI,
         functionName: "queueShock",
         args: [BigInt(bps)],
@@ -113,12 +116,12 @@ export function AdminConsole({ isAdmin, onRefresh }: AdminConsoleProps) {
       setIsTxPending(true);
       setStatusMsg("Recording official Friday close price on feeds...");
       const h1 = await writeContractAsync({
-        address: CONTRACT_ADDRESSES.MockPriceFeedGuarded,
+        address: resolvedAddresses.MockPriceFeedGuarded,
         abi: PRICE_FEED_ABI,
         functionName: "checkpointClose",
       });
       await writeContractAsync({
-        address: CONTRACT_ADDRESSES.MockPriceFeedStandard,
+        address: resolvedAddresses.MockPriceFeedStandard,
         abi: PRICE_FEED_ABI,
         functionName: "checkpointClose",
       });
@@ -141,7 +144,7 @@ export function AdminConsole({ isAdmin, onRefresh }: AdminConsoleProps) {
       setIsTxPending(true);
       setStatusMsg(`Running keeper deleveraging on ${shortenAddress(traderToDeleverage)}...`);
       const hash = await writeContractAsync({
-        address: CONTRACT_ADDRESSES.PerpMarketGuarded,
+        address: resolvedAddresses.PerpMarketGuarded,
         abi: PERP_MARKET_ABI,
         functionName: "deleverageToCap",
         args: [traderToDeleverage as `0x${string}`],
@@ -192,7 +195,7 @@ export function AdminConsole({ isAdmin, onRefresh }: AdminConsoleProps) {
             Time-travel simulation and oracle shock controls are locked for public wallets. To trigger on-chain time jumps and weekend gap shocks, connect the deployer address:
           </p>
           <div className="p-2.5 rounded bg-black/60 font-mono text-[11px] text-cyan-300 select-all border border-slate-800">
-            {CONTRACT_ADDRESSES.Deployer}
+            {resolvedAddresses.Deployer}
           </div>
           <p className="text-[11px] text-slate-400">
             The full deterministic scenario has already been broadcast on Avalanche Fuji C-Chain, recording bad debt on the Standard Market and 0 on the Guarded Market.

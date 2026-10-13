@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
-import { ArrowUpRight, ChevronDown, Menu, Wallet, X } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { ArrowUpRight, ChevronDown, Menu, Wallet, X, Check } from "lucide-react";
 import { useAccount, useConnect, useDisconnect, useSwitchChain } from "wagmi";
 import { activeChainId, ACTIVE_CHAIN_NAME } from "../config/chains";
 import { shortenAddress } from "../lib/format";
@@ -51,17 +51,31 @@ export function Navbar() {
   const { address, isConnected, chainId } = useAccount();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [exploreOpen, setExploreOpen] = useState(false);
+  const [networkDropdownOpen, setNetworkDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
   const { switchChain } = useSwitchChain();
 
-  const isL1 = chainId === 98421 || (chainId === undefined && ACTIVE_CHAIN_NAME === "l1");
-  const isWrongChain = isConnected && chainId !== activeChainId;
-  const expectedNetwork = isL1 ? "Nyxor L1" : "Fuji C-Chain";
+  const isL1 = chainId === 98421;
+  const isFuji = chainId === 43113;
+  const isSupportedChain = isL1 || isFuji;
+  const isWrongChain = isConnected && !isSupportedChain;
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setNetworkDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const closeMenus = () => {
     setExploreOpen(false);
     setMobileMenuOpen(false);
+    setNetworkDropdownOpen(false);
   };
 
   const walletControl = !isConnected ? (
@@ -75,21 +89,101 @@ export function Navbar() {
     </button>
   ) : isWrongChain ? (
     <button
-      onClick={() => switchChain({ chainId: activeChainId })}
+      onClick={() => switchChain({ chainId: 98421 })}
       className="inline-flex h-12 items-center gap-2 rounded-xl bg-[#f4f4f0] px-5 text-[13px] font-bold text-[#0a0a0a] transition hover:-translate-y-0.5 hover:bg-white"
     >
-      Switch to {expectedNetwork}
+      Switch to Nyxor L1
       <ArrowUpRight className="h-3.5 w-3.5" />
     </button>
   ) : (
     <div className="flex items-center gap-2">
-      <button
-        onClick={() => switchChain({ chainId: isL1 ? 43113 : 98421 })}
-        className="hidden h-12 rounded-xl border border-white/15 px-3 text-[11px] text-neutral-300 transition hover:border-white/35 hover:text-white sm:inline-flex sm:items-center"
-        title={`Switch network to ${isL1 ? "Fuji C-Chain" : "Nyxor L1"}`}
-      >
-        {isL1 ? "L1" : "Fuji"}
-      </button>
+      {/* Network Selector Dropdown */}
+      <div className="relative" ref={dropdownRef}>
+        <button
+          type="button"
+          onClick={() => setNetworkDropdownOpen((open) => !open)}
+          className="inline-flex h-12 items-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] px-3.5 text-[12px] font-medium text-neutral-200 transition hover:border-white/35 hover:bg-white/[0.08]"
+          title="Switch Network"
+          aria-expanded={networkDropdownOpen}
+        >
+          <span
+            className={`h-2 w-2 rounded-full ${
+              isL1
+                ? "bg-violet-400 shadow-[0_0_8px_rgba(167,139,250,0.8)]"
+                : "bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]"
+            }`}
+          />
+          <span className="mono-numbers font-semibold">{isL1 ? "Nyxor L1" : "Fuji C-Chain"}</span>
+          <ChevronDown
+            className={`h-3.5 w-3.5 text-neutral-400 transition-transform ${
+              networkDropdownOpen ? "rotate-180" : ""
+            }`}
+          />
+        </button>
+
+        {networkDropdownOpen && (
+          <div className="absolute right-0 top-14 z-50 w-56 rounded-2xl border border-white/15 bg-[#141413] p-2 shadow-[0_20px_50px_rgba(0,0,0,0.7)] backdrop-blur-xl">
+            <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-neutral-500 font-semibold">
+              Select Network
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (!isL1) {
+                  switchChain({ chainId: 98421 });
+                }
+                setNetworkDropdownOpen(false);
+              }}
+              className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-xs transition ${
+                isL1
+                  ? "bg-white/10 text-white font-semibold"
+                  : "text-neutral-400 hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="h-2 w-2 rounded-full bg-violet-400" />
+                <div>
+                  <div className="text-white font-medium">Nyxor L1</div>
+                  <div className="text-[10px] text-neutral-500">Chain ID 98421</div>
+                </div>
+              </div>
+              {isL1 && (
+                <span className="flex items-center gap-1 text-[10px] font-bold text-violet-400 uppercase">
+                  <Check className="h-3 w-3" /> Active
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (!isFuji) {
+                  switchChain({ chainId: 43113 });
+                }
+                setNetworkDropdownOpen(false);
+              }}
+              className={`mt-1 flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-xs transition ${
+                isFuji
+                  ? "bg-white/10 text-white font-semibold"
+                  : "text-neutral-400 hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="h-2 w-2 rounded-full bg-cyan-400" />
+                <div>
+                  <div className="text-white font-medium">Fuji C-Chain</div>
+                  <div className="text-[10px] text-neutral-500">Chain ID 43113</div>
+                </div>
+              </div>
+              {isFuji && (
+                <span className="flex items-center gap-1 text-[10px] font-bold text-cyan-400 uppercase">
+                  <Check className="h-3 w-3" /> Active
+                </span>
+              )}
+            </button>
+          </div>
+        )}
+      </div>
+
       <div className="flex h-12 items-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-3 text-[11px] mono-numbers text-neutral-100">
         <span className="signal-dot" />
         {shortenAddress(address)}

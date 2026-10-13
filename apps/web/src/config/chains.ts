@@ -60,7 +60,7 @@ export const l1Chain: Chain = {
 export type ActiveChain = "fuji" | "l1";
 
 export const ACTIVE_CHAIN_NAME: ActiveChain =
-  (process.env.NEXT_PUBLIC_CHAIN as ActiveChain) || "fuji";
+  (process.env.NEXT_PUBLIC_CHAIN as ActiveChain) || "l1";
 
 export const activeChain: Chain =
   ACTIVE_CHAIN_NAME === "l1" ? l1Chain : fujiChain;
@@ -70,4 +70,4 @@ export const activeChainId = activeChain.id;
 export const activeExplorer =
   ACTIVE_CHAIN_NAME === "l1" ? l1Explorer : FUJI_EXPLORER;
 
-export const supportedChains: [Chain, ...Chain[]] = [fujiChain, l1Chain];
+export const supportedChains: [Chain, ...Chain[]] = [l1Chain, fujiChain];

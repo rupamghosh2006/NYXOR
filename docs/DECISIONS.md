@@ -231,3 +231,19 @@ For the L1 if pursued. Assumed from subnet-evm docs:
 
 **Reference:** The user-supplied navigation reference informed the spatial hierarchy and menu behavior only. Nyxor branding, wording, routes, and implementation remain original.
 
+---
+
+## 2026-10-13 — Dual-Chain Network Switcher & Erroneous "Wrong Chain" Fix
+
+**Decision:** Refactored Navbar network handling to natively recognize both **Nyxor L1 (Chain ID: 98421)** and **Avalanche Fuji C-Chain (Chain ID: 43113)** as first-class supported chains, default `ACTIVE_CHAIN_NAME` to `"l1"`, and replaced the single toggle button with an explicit network selector dropdown.
+
+**Reason:**
+1. Previously, `activeChainId` defaulted to `43113` (Fuji) when `NEXT_PUBLIC_CHAIN` was not explicitly set to `"l1"` on Vercel. Consequently, connecting on Nyxor L1 triggered `isWrongChain = chainId !== activeChainId` (`98421 !== 43113`).
+2. Concurrently, `expectedNetwork` was calculated via `isL1 ? "Nyxor L1" : "Fuji C-Chain"` based on the *current* wallet chain rather than the target chain. When already on Nyxor L1, the button displayed `"Switch to Nyxor L1"`, but its `onClick` called `switchChain({ chainId: activeChainId })` (`43113`), causing Core wallet to prompt: `"Do you want to switch to Avalanche (C-Chain)?"`.
+3. The new design recognizes both chains as valid (`isSupportedChain = isL1 || isFuji`). "Wrong Chain" is only triggered if a wallet connects on an unsupported foreign network (e.g. Ethereum Mainnet).
+4. For supported networks, an interactive dropdown pill clearly shows the connected network status (`Nyxor L1` or `Fuji C-Chain`) with an active indicator, and allows switching to the alternate network with explicit confirmation of the target network.
+5. `LiveMarketConsole` and `AdminConsole` were synchronized to automatically update the active deployment target when the user switches chains in their wallet.
+
+**Alternatives considered:** Forcing the entire app to one chain only (rejected: collateral bridge and benchmark solvency proof require both Nyxor L1 and Fuji C-Chain).
+
+

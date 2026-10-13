@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAccount, useReadContracts } from "wagmi";
 import { Database, Sparkles, Layers } from "lucide-react";
 import {
@@ -38,6 +38,15 @@ export function LiveMarketConsole({ view }: { view: ConsoleView }) {
   const [deploymentInstance, setDeploymentInstance] = useState<DeploymentInstance>(
     chainId === 98421 ? "l1" : "benchmark"
   );
+
+  useEffect(() => {
+    if (chainId === 98421) {
+      setDeploymentInstance("l1");
+    } else if (chainId === 43113) {
+      setDeploymentInstance("benchmark");
+    }
+  }, [chainId]);
+
   const addresses = getAddressesForInstance(deploymentInstance);
 
   const { data: coreData, refetch: refetchCore } = useReadContracts({
@@ -205,7 +214,7 @@ export function LiveMarketConsole({ view }: { view: ConsoleView }) {
         />
       )}
 
-      {view === "demo" && <AdminConsole isAdmin={isAdmin} onRefresh={handleRefreshAll} />}
+      {view === "demo" && <AdminConsole isAdmin={isAdmin} onRefresh={handleRefreshAll} addresses={addresses} />}
     </div>
   );
 }
