@@ -159,14 +159,14 @@ export function AdminConsole({ isAdmin, onRefresh }: AdminConsoleProps) {
   };
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-[#0F1523] p-6 shadow-xl">
-      <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+    <div className="nyxor-card rounded-[1.5rem] p-6 transition-colors">
+      <div className="flex items-center justify-between pb-4 border-b border-white/10">
         <div className="flex items-center gap-2.5">
-          <Wrench className="h-4 w-4 text-cyan-400" />
+          <Wrench className="h-4 w-4 text-[#d8ff3f]" />
           <h3 className="font-bold text-white text-sm">
             Admin Time-Travel & Oracle Gap Controls
           </h3>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 border border-cyan-800 text-cyan-300">
+          <span className="rounded-full border border-[#d8ff3f]/25 bg-[#d8ff3f]/10 px-2 py-1 text-[10px] mono-numbers text-[#d8ff3f]">
             HACKATHON DEMO
           </span>
         </div>

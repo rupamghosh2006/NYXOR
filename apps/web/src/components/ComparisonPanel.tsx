@@ -34,24 +34,25 @@ export function ComparisonPanel({ standard, guarded, phase }: ComparisonPanelPro
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-end justify-between gap-4">
         <div>
-          <h2 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
-            <span>Market Solvency Comparison</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-mono">
-              Live Fuji Contracts
-            </span>
+          <div className="eyebrow flex items-center gap-2 text-[#d8ff3f]">
+            <span className="signal-dot" /> Same shock / different rules
+          </div>
+          <h2 className="mt-2 text-2xl font-extrabold tracking-[-0.045em] text-white flex items-center gap-2">
+            <span>Solvency, side by side.</span>
           </h2>
-          <p className="text-xs text-slate-400">
+          <p className="mt-1 text-xs text-neutral-500">
             Identical trade sizes & market shock — comparing naive 24/7 flat risk vs. Nyxor market-hours engine.
           </p>
         </div>
+        <span className="hidden sm:inline rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-[10px] mono-numbers text-neutral-400">LIVE FUJI CONTRACTS</span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Standard Naive Market */}
-        <div className="relative overflow-hidden rounded-2xl border border-rose-900/40 bg-[#0F1523] p-5 shadow-xl transition-all">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800/80">
+        <div className="nyxor-card relative overflow-hidden rounded-[1.5rem] border-rose-900/50 p-5 transition-all">
+          <div className="flex items-center justify-between pb-3 border-b border-white/10">
             <div className="flex items-center gap-2.5">
               <span className="flex h-3 w-3 rounded-full bg-rose-500" />
               <div>
@@ -164,8 +165,8 @@ export function ComparisonPanel({ standard, guarded, phase }: ComparisonPanelPro
         </div>
 
         {/* Guarded Nyxor Market */}
-        <div className="relative overflow-hidden rounded-2xl border border-violet-500/40 bg-[#0F1523] p-5 shadow-xl transition-all">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800/80">
+        <div className="nyxor-card relative overflow-hidden rounded-[1.5rem] border-violet-400/45 p-5 transition-all">
+          <div className="flex items-center justify-between pb-3 border-b border-white/10">
             <div className="flex items-center gap-2.5">
               <span className="flex h-3 w-3 rounded-full bg-violet-400 shadow-lg shadow-violet-500/50 animate-pulse" />
               <div>

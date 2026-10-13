@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { useAccount, useReadContracts } from "wagmi";
 import {
@@ -20,7 +21,7 @@ import { ComparisonPanel } from "../components/ComparisonPanel";
 import { TradingPanel } from "../components/TradingPanel";
 import { AdminConsole } from "../components/AdminConsole";
 import { RecordedRun } from "../components/RecordedRun";
-import { ExternalLink, Shield, Github, Sparkles, Database } from "lucide-react";
+import { ExternalLink, Github, Sparkles, Database, ArrowUpRight } from "lucide-react";
 
 export default function Home() {
   const { address, isConnected } = useAccount();
@@ -274,94 +275,144 @@ export default function Home() {
       : standardParams?.reduceOnly;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col justify-between">
+    <div id="top" className="nyxor-shell flex flex-col justify-between">
       <div>
         <Navbar />
         <Banner demoMode={demoMode} />
 
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        <div className="overflow-hidden border-y border-white/10 bg-white/[0.025] py-2">
+          <div className="ticker-track whitespace-nowrap eyebrow text-neutral-500">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <span key={index} className="mr-10 inline-flex items-center gap-3">
+                <span className="text-[#d8ff3f]">◆</span>
+                NYXOR / MARKET-HOURS RISK ENGINE
+                <span className="text-violet-300">—</span>
+                PRE-CLOSE DELEVERAGING
+                <span className="text-[#d8ff3f]">—</span>
+                FUJI TESTNET / SIMULATED ORACLE
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14 space-y-10">
+          <section id="protocol" className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
+            <div>
+              <div className="eyebrow flex items-center gap-2 text-[#d8ff3f]">
+                <span className="signal-dot" /> LIVE ON FUJI / DEMO ENVIRONMENT
+              </div>
+              <h1 className="mt-4 max-w-3xl text-[clamp(2.8rem,7vw,6.75rem)] font-extrabold leading-[0.87] tracking-[-0.065em] text-white">
+                The market closes.<br />
+                <span className="text-neutral-500">Your risk shouldn&apos;t.</span>
+              </h1>
+            </div>
+            <div className="max-w-md lg:justify-self-end lg:pb-1">
+              <p className="text-sm leading-6 text-neutral-400">
+                Nyxor turns market hours into on-chain guardrails—tightening leverage before the reference market sleeps, then reopening with care.
+              </p>
+              <a href="#comparison" className="mt-5 inline-flex items-center gap-2 text-xs font-bold tracking-[0.08em] text-white uppercase transition-colors hover:text-[#d8ff3f]">
+                See the risk engine <ArrowUpRight className="h-4 w-4" />
+              </a>
+            </div>
+          </section>
+
           {/* Instance Selector */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800 text-xs font-mono">
-            <div className="flex items-center gap-2 text-slate-300">
-              <Database className="h-4 w-4 text-cyan-400" />
-              <span>Deployment Target:</span>
+          <div className="nyxor-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-[1.35rem] p-3.5 text-xs">
+            <div className="flex items-center gap-2 text-neutral-300">
+              <Database className="h-4 w-4 text-[#d8ff3f]" />
+              <span className="eyebrow">Deployment target</span>
             </div>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setDeploymentInstance("benchmark")}
-                className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 ${
+                className={`rounded-full border px-3 py-2 transition-all flex items-center gap-1.5 mono-numbers ${
                   deploymentInstance === "benchmark"
-                    ? "bg-violet-600 text-white font-bold shadow-lg shadow-violet-600/30"
-                    : "bg-slate-800/80 text-slate-400 hover:text-white"
+                    ? "border-white bg-white text-black font-bold"
+                    : "border-white/10 bg-white/[0.03] text-neutral-500 hover:border-white/30 hover:text-white"
                 }`}
               >
-                <span>Frozen Benchmark (Scenario Recorded — 7,487.26 USDx Loss Beyond Collateral)</span>
+                <span>Frozen benchmark</span>
+                <span className="hidden md:inline">/ recorded scenario</span>
               </button>
               <button
                 onClick={() => setDeploymentInstance("demo")}
-                className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 ${
+                className={`rounded-full border px-3 py-2 transition-all flex items-center gap-1.5 mono-numbers ${
                   deploymentInstance === "demo"
-                    ? "bg-cyan-600 text-white font-bold shadow-lg shadow-cyan-600/30"
-                    : "bg-slate-800/80 text-slate-400 hover:text-white"
+                    ? "border-[#d8ff3f] bg-[#d8ff3f] text-black font-bold"
+                    : "border-white/10 bg-white/[0.03] text-neutral-500 hover:border-white/30 hover:text-white"
                 }`}
               >
                 <Sparkles className="h-3.5 w-3.5" />
-                <span>Fresh Demo Instance (Untouched — Ready for Video)</span>
+                <span>Fresh demo</span>
+                <span className="hidden md:inline">/ ready to run</span>
               </button>
             </div>
           </div>
 
           {/* Hero Section: Market Hours Phase Pill */}
-          <PhaseHero
-            phase={currentPhase}
-            secondsToClose={secondsToClose}
-            secondsSinceOpen={secondsSinceOpen}
-            effectiveNow={effectiveNow}
-            guardedMaxLev={guardedParams?.maxLeverageX100}
-            guardedReduceOnly={guardedParams?.reduceOnly}
-            demoMode={demoMode}
-          />
+          <section aria-label="Market-hours risk status">
+            <PhaseHero
+              phase={currentPhase}
+              secondsToClose={secondsToClose}
+              secondsSinceOpen={secondsSinceOpen}
+              effectiveNow={effectiveNow}
+              guardedMaxLev={guardedParams?.maxLeverageX100}
+              guardedReduceOnly={guardedParams?.reduceOnly}
+              demoMode={demoMode}
+            />
+          </section>
 
           {/* Solvency Comparison: Standard vs Guarded */}
-          <ComparisonPanel
-            phase={currentPhase}
-            standard={{
-              vaultAssets: coreData?.[4]?.result as bigint | undefined,
-              insuranceFund: coreData?.[5]?.result as bigint | undefined,
-              badDebtTotal: coreData?.[6]?.result as bigint | undefined,
-              totalOiLong: coreData?.[10]?.result as bigint | undefined,
-              totalOiShort: coreData?.[11]?.result as bigint | undefined,
-              price: standardPriceData?.[0],
-              maxLeverage: standardParams?.maxLeverageX100 || 2000,
-              reduceOnly: standardParams?.reduceOnly || false,
-            }}
-            guarded={{
-              vaultAssets: coreData?.[7]?.result as bigint | undefined,
-              insuranceFund: coreData?.[8]?.result as bigint | undefined,
-              badDebtTotal: coreData?.[9]?.result as bigint | undefined,
-              totalOiLong: coreData?.[12]?.result as bigint | undefined,
-              totalOiShort: coreData?.[13]?.result as bigint | undefined,
-              price: guardedPriceData?.[0],
-              maxLeverage: guardedParams?.maxLeverageX100 || 500,
-              reduceOnly: guardedParams?.reduceOnly || false,
-            }}
-          />
+          <section id="comparison">
+            <ComparisonPanel
+              phase={currentPhase}
+              standard={{
+                vaultAssets: coreData?.[4]?.result as bigint | undefined,
+                insuranceFund: coreData?.[5]?.result as bigint | undefined,
+                badDebtTotal: coreData?.[6]?.result as bigint | undefined,
+                totalOiLong: coreData?.[10]?.result as bigint | undefined,
+                totalOiShort: coreData?.[11]?.result as bigint | undefined,
+                price: standardPriceData?.[0],
+                maxLeverage: standardParams?.maxLeverageX100 || 2000,
+                reduceOnly: standardParams?.reduceOnly || false,
+              }}
+              guarded={{
+                vaultAssets: coreData?.[7]?.result as bigint | undefined,
+                insuranceFund: coreData?.[8]?.result as bigint | undefined,
+                badDebtTotal: coreData?.[9]?.result as bigint | undefined,
+                totalOiLong: coreData?.[12]?.result as bigint | undefined,
+                totalOiShort: coreData?.[13]?.result as bigint | undefined,
+                price: guardedPriceData?.[0],
+                maxLeverage: guardedParams?.maxLeverageX100 || 500,
+                reduceOnly: guardedParams?.reduceOnly || false,
+              }}
+            />
+          </section>
 
           {/* Deployment Record & Live Vault State — no wallet required */}
-          <RecordedRun />
+          <section id="evidence"><RecordedRun /></section>
 
           {/* Interactive Trading & Position Card */}
-          <TradingPanel
-            selectedMarket={selectedMarket}
-            onSelectMarket={setSelectedMarket}
-            markPrice={selectedPrice}
-            maxLeverage={selectedMaxLev}
-            reduceOnly={selectedReduceOnly}
-            usdcBalance={usdcBalance}
-            usdcAllowance={usdcAllowance}
-            userPosition={userPosition}
-            onRefresh={handleRefreshAll}
-          />
+          <section id="trade">
+            <div className="mb-4 flex items-end justify-between gap-4">
+              <div>
+                <p className="eyebrow text-[#d8ff3f]">Trading terminal</p>
+                <h2 className="mt-1 text-2xl font-extrabold tracking-[-0.04em] text-white">Place risk inside the guardrails.</h2>
+              </div>
+              <span className="hidden sm:inline mono-numbers text-[11px] text-neutral-500">ORACLE-PRICED / TESTNET ONLY</span>
+            </div>
+            <TradingPanel
+              selectedMarket={selectedMarket}
+              onSelectMarket={setSelectedMarket}
+              markPrice={selectedPrice}
+              maxLeverage={selectedMaxLev}
+              reduceOnly={selectedReduceOnly}
+              usdcBalance={usdcBalance}
+              usdcAllowance={usdcAllowance}
+              userPosition={userPosition}
+              onRefresh={handleRefreshAll}
+            />
+          </section>
 
           {/* Admin Time-Travel & Oracle Gap Shock Console */}
           <AdminConsole isAdmin={isAdmin} onRefresh={handleRefreshAll} />
@@ -369,14 +420,16 @@ export default function Home() {
       </div>
 
       {/* Footer */}
-      <footer className="mt-16 border-t border-slate-900 bg-[#05080E] py-12 text-slate-400 text-xs">
+      <footer className="mt-20 border-t border-white/10 bg-black/40 py-12 text-neutral-400 text-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <div className="flex items-center gap-2 text-white font-mono font-bold text-sm">
-              <Shield className="h-4 w-4 text-violet-400" />
+            <div className="flex items-center gap-2.5 text-white font-bold text-sm tracking-[0.12em]">
+              <div className="logo-frame h-7 w-7 rounded-full">
+                <Image src="/nyxor-mark.png" alt="" fill sizes="28px" className="object-cover" />
+              </div>
               <span>NYXOR PROTOCOL</span>
             </div>
-            <p className="mt-2 text-slate-400 leading-relaxed font-sans text-xs">
+            <p className="mt-3 text-neutral-500 leading-relaxed font-sans text-xs">
               An open-source, market-hours-aware risk layer for RWA perpetual futures.
               Built for the Avalanche "Build Anything" Speedrun Hackathon.
             </p>
@@ -385,7 +438,7 @@ export default function Home() {
                 href="https://github.com/rupamghosh2006/NYXOR"
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-1.5 text-slate-400 hover:text-white transition-colors font-mono"
+                className="flex items-center gap-1.5 text-neutral-500 hover:text-[#d8ff3f] transition-colors mono-numbers"
               >
                 <Github className="h-3.5 w-3.5" />
                 <span>GitHub Repo</span>
@@ -394,16 +447,16 @@ export default function Home() {
           </div>
 
           <div>
-            <div className="text-white font-mono font-semibold text-xs uppercase tracking-wider mb-2">
+            <div className="text-white eyebrow mb-3">
               Verified Fuji Contracts (43113)
             </div>
-            <ul className="space-y-1 font-mono text-[11px] text-slate-400">
+            <ul className="space-y-2 mono-numbers text-[11px] text-neutral-500">
               <li>
                 <a
                   href={`https://testnet.snowscan.xyz/address/${addresses.PerpMarketGuarded}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="hover:text-cyan-400 flex items-center gap-1"
+                  className="hover:text-[#d8ff3f] flex items-center gap-1"
                 >
                   <span>PerpMarketGuarded</span>
                   <ExternalLink className="h-3 w-3" />
@@ -414,7 +467,7 @@ export default function Home() {
                   href={`https://testnet.snowscan.xyz/address/${addresses.LiquidityVaultGuarded}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="hover:text-cyan-400 flex items-center gap-1"
+                  className="hover:text-[#d8ff3f] flex items-center gap-1"
                 >
                   <span>LiquidityVaultGuarded</span>
                   <ExternalLink className="h-3 w-3" />
@@ -425,7 +478,7 @@ export default function Home() {
                   href={`https://testnet.snowscan.xyz/address/${addresses.MarketHoursRiskPolicy}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="hover:text-cyan-400 flex items-center gap-1"
+                  className="hover:text-[#d8ff3f] flex items-center gap-1"
                 >
                   <span>MarketHoursRiskPolicy</span>
                   <ExternalLink className="h-3 w-3" />
@@ -436,7 +489,7 @@ export default function Home() {
                   href={`https://testnet.snowscan.xyz/address/${addresses.MarketClock}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="hover:text-cyan-400 flex items-center gap-1"
+                  className="hover:text-[#d8ff3f] flex items-center gap-1"
                 >
                   <span>MarketClock</span>
                   <ExternalLink className="h-3 w-3" />
@@ -446,10 +499,10 @@ export default function Home() {
           </div>
 
           <div>
-            <div className="text-white font-mono font-semibold text-xs uppercase tracking-wider mb-2">
+            <div className="text-white eyebrow mb-3">
               Core Architecture Invariants
             </div>
-            <p className="text-slate-400 leading-relaxed font-sans text-xs">
+            <p className="text-neutral-500 leading-relaxed font-sans text-xs">
               "Betting on a stock while the exchange is closed is like betting on a game while the scoreboard is off. Nobody knows the real score until Monday. Nyxor automatically ramps down leverage, deleverages over-cap exposure before close at an open-market price, and eliminates unbacked bad debt."
             </p>
           </div>

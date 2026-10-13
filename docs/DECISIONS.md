@@ -173,3 +173,15 @@ For the L1 if pursued. Assumed from subnet-evm docs:
 3. **CLOSED Market Execution Pricing:** During `Phase.CLOSED`, `_getExecutionPrice()` executes against the frozen `lastOfficialClosePrice()` and bypasses staleness checks. Traders can call `closePosition()` and keepers can call `liquidate()` (against 6% MM) so trader capital is never trapped over weekends.
 4. **Deleveraging Funding Settlement:** `deleverageToCap` settles accrued funding and resets `fundingIndexSnapshot` upon resizing over-cap positions, ensuring remaining equity and target size align to precisely `5.00x` leverage without drift.
 5. **Stateful Invariant Testing:** Token conservation invariant (`marketBal + vaultBal >= totalTraderCollateral + vaultAssets + insuranceFund`) validated across 3,840 calls without invariant failure or unexpected reverts.
+
+---
+
+## 2026-10-13 — Web console visual direction
+
+**Decision:** Refresh the Nyxor web console with an editorial, high-contrast dark interface: oversized message-first typography, graphite surfaces, lime status accents, mono data readouts, and concise utility navigation. The supplied Nyxor mark is the sole product logo, rendered in the primary header and footer.
+
+**Reason:** Nyxor needs to communicate its risk thesis before presenting dense execution controls. The visual system distinguishes safety-critical status and actionable controls while retaining the required simulated-data disclosures.
+
+**Reference:** Kimia's public site informed the layout rhythm and contrast, but no branded content, imagery, or implementation was copied.
+
+**Alternatives considered:** Retaining the original dense terminal-only layout; using a generic neon-violet trading dashboard. Both make the protocol narrative and phase status less legible at first glance.

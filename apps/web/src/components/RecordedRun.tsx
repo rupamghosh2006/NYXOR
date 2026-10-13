@@ -79,21 +79,22 @@ export function RecordedRun() {
   ];
 
   return (
-    <section className="rounded-2xl border border-slate-800 bg-[#0F1523] overflow-hidden shadow-xl">
+    <section className="nyxor-card overflow-hidden rounded-[1.5rem] transition-colors">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/40">
+      <div className="flex items-center justify-between gap-4 border-b border-white/10 bg-white/[0.025] px-6 py-4">
         <div className="flex items-center gap-2.5">
-          <Layers className="h-4 w-4 text-cyan-400" />
+          <Layers className="h-4 w-4 text-[#d8ff3f]" />
           <div>
-            <h2 className="font-bold text-white text-sm">
+            <p className="eyebrow text-[#d8ff3f]">Verifiable evidence</p>
+            <h2 className="mt-1 font-bold text-white text-sm">
               Recorded Benchmark Run (Frozen Fuji On-Chain Instance)
             </h2>
-            <p className="text-[11px] text-slate-400 font-mono">
+            <p className="text-[11px] text-neutral-500 mono-numbers">
               Executed at {fujiScenario.executedAt.replace("T", " ").replace("Z", " UTC")} · Chain ID 43113
             </p>
           </div>
         </div>
-        <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-emerald-950/80 border border-emerald-800/60 text-emerald-300">
+        <span className="shrink-0 rounded-full border border-[#d8ff3f]/30 bg-[#d8ff3f]/10 px-2.5 py-1 text-[10px] mono-numbers text-[#d8ff3f]">
           On-Chain Verified
         </span>
       </div>

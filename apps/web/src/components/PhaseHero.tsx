@@ -95,7 +95,7 @@ export function PhaseHero({
   }
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-[#0F1523]/80 p-6 shadow-2xl backdrop-blur-md">
+    <div className="nyxor-card relative overflow-hidden rounded-[1.75rem] p-6 sm:p-7 transition-colors">
       {/* Background glow matching active phase */}
       <div
         className={`absolute -right-20 -top-20 h-64 w-64 rounded-full opacity-15 blur-3xl pointer-events-none ${
@@ -109,67 +109,67 @@ export function PhaseHero({
         }`}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 items-center">
         {/* Hero Phase Pill */}
         <div className="md:col-span-1 flex flex-col gap-3">
-          <div className="flex items-center gap-2 text-xs font-semibold tracking-wider text-slate-400 uppercase">
-            <Shield className="h-4 w-4 text-violet-400" />
-            <span>Market Hours Regime</span>
+          <div className="eyebrow flex items-center gap-2 text-neutral-500">
+            <Shield className="h-3.5 w-3.5 text-[#d8ff3f]" />
+            <span>Nyxor market state</span>
           </div>
 
           <div
-            className={`inline-flex items-center gap-3 rounded-xl border px-4 py-3 shadow-lg ${phaseConfig.bgClass}`}
+            className={`inline-flex items-center gap-3 rounded-2xl border px-4 py-3.5 shadow-lg ${phaseConfig.bgClass}`}
           >
             <span className={`h-3 w-3 rounded-full ${phaseConfig.dotClass}`} />
             <div>
-              <div className="text-xl font-black tracking-tight font-mono">
+              <div className="text-xl font-extrabold tracking-[-0.04em] mono-numbers">
                 {phaseConfig.name}
               </div>
-              <div className="text-[11px] font-semibold tracking-widest opacity-80 uppercase">
+              <div className="eyebrow mt-0.5 opacity-80">
                 {phaseConfig.badge}
               </div>
             </div>
           </div>
 
-          <p className="text-xs text-slate-400 leading-relaxed">
+          <p className="max-w-sm text-xs text-neutral-400 leading-relaxed">
             {phaseConfig.description}
           </p>
         </div>
 
         {/* Dynamic Countdown & Simulated Clock */}
-        <div className="md:col-span-1 flex flex-col items-start md:items-center justify-center p-4 rounded-xl bg-slate-900/60 border border-slate-800/80">
-          <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1 font-mono">
-            <Clock className="h-3.5 w-3.5 text-cyan-400" />
+        <div className="md:col-span-1 flex flex-col items-start md:items-center justify-center rounded-2xl border border-white/10 bg-black/30 p-4">
+          <div className="eyebrow flex items-center gap-1.5 text-neutral-500 mb-2">
+            <Clock className="h-3.5 w-3.5 text-[#d8ff3f]" />
             <span>Simulated Market Clock</span>
             {demoMode && (
-              <span className="text-[10px] bg-cyan-950 text-cyan-400 border border-cyan-800/60 px-1.5 py-0.2 rounded font-mono">
+              <span className="rounded-full border border-[#d8ff3f]/30 bg-[#d8ff3f]/10 px-1.5 py-0.5 text-[9px] text-[#d8ff3f] mono-numbers">
                 DEMO
               </span>
             )}
           </div>
 
-          <div className="text-2xl font-bold font-mono text-white tracking-tight">
+          <div className="mono-numbers text-2xl font-bold text-white tracking-tight">
             {countdownText}
           </div>
-          <div className="text-xs text-slate-400 font-mono mt-0.5">{countdownSub}</div>
+          <div className="mt-0.5 text-xs text-neutral-500 mono-numbers">{countdownSub}</div>
 
-          <div className="mt-3 text-[11px] text-slate-400 font-mono bg-black/40 px-2.5 py-1 rounded border border-slate-800">
+          <div className="mt-3 rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] text-neutral-500 mono-numbers">
             {formatUtcTime(effectiveNow)}
           </div>
         </div>
 
         {/* Dynamic Risk Meter for Guarded vs Naive */}
-        <div className="md:col-span-1 flex flex-col justify-between gap-3 p-4 rounded-xl bg-slate-900/60 border border-slate-800/80">
+        <div className="md:col-span-1 flex flex-col justify-between gap-3 rounded-2xl border border-white/10 bg-black/30 p-4">
           <div>
-            <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
+            <div className="flex items-center justify-between text-xs text-neutral-500 mb-2">
               <span>Nyxor Dynamic Leverage Cap</span>
-              <span className="font-mono font-bold text-violet-400">
+              <span className="mono-numbers font-bold text-[#d8ff3f]">
                 {formatLeverage(guardedMaxLev)}
               </span>
             </div>
 
             {/* Progress Bar */}
-            <div className="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
+            <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
               <div
                 className={`h-full transition-all duration-500 rounded-full ${
                   phase === 0
@@ -184,16 +184,16 @@ export function PhaseHero({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/60 text-xs">
+          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10 text-xs">
             <div>
-              <span className="text-slate-400 text-[11px]">Mode</span>
-              <div className="font-mono font-medium text-slate-200">
+              <span className="text-neutral-500 text-[11px]">Mode</span>
+              <div className="mono-numbers font-medium text-neutral-100">
                 {guardedReduceOnly ? "Reduce-Only" : "Normal"}
               </div>
             </div>
             <div>
-              <span className="text-slate-400 text-[11px]">Naive Market</span>
-              <div className="font-mono font-medium text-rose-400">
+              <span className="text-neutral-500 text-[11px]">Naive market</span>
+              <div className="mono-numbers font-medium text-rose-300">
                 Static 20.00x
               </div>
             </div>

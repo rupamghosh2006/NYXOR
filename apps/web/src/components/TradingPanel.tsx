@@ -189,16 +189,16 @@ export function TradingPanel({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       {/* Trading Form */}
-      <div className="lg:col-span-6 rounded-2xl border border-slate-800 bg-[#0F1523] p-6 shadow-xl">
+      <div className="nyxor-card lg:col-span-6 rounded-[1.5rem] p-6 transition-colors">
         {/* Market Selector Tabs */}
-        <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+        <div className="flex items-center justify-between pb-4 border-b border-white/10">
           <div className="flex gap-2">
             <button
               onClick={() => onSelectMarket("guarded")}
               className={`px-4 py-2 rounded-xl text-xs font-semibold tracking-wide transition-all ${
                 selectedMarket === "guarded"
-                  ? "bg-violet-600 text-white shadow-lg shadow-violet-600/30"
-                  : "bg-slate-900/80 text-slate-400 hover:text-white"
+                  ? "bg-white text-black shadow-lg shadow-white/10"
+                  : "bg-white/[0.04] text-neutral-500 hover:bg-white/[0.08] hover:text-white"
               }`}
             >
               Guarded Market (Nyxor)
@@ -207,8 +207,8 @@ export function TradingPanel({
               onClick={() => onSelectMarket("standard")}
               className={`px-4 py-2 rounded-xl text-xs font-semibold tracking-wide transition-all ${
                 selectedMarket === "standard"
-                  ? "bg-rose-600 text-white shadow-lg shadow-rose-600/30"
-                  : "bg-slate-900/80 text-slate-400 hover:text-white"
+                  ? "bg-rose-500 text-white shadow-lg shadow-rose-950/30"
+                  : "bg-white/[0.04] text-neutral-500 hover:bg-white/[0.08] hover:text-white"
               }`}
             >
               Standard (Naive 20x)
@@ -220,7 +220,7 @@ export function TradingPanel({
             <button
               onClick={handleFaucet}
               disabled={isTxPending}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-950/80 border border-cyan-800/60 text-cyan-300 hover:bg-cyan-900/80 text-xs font-mono transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#d8ff3f]/25 bg-[#d8ff3f]/10 text-[#d8ff3f] hover:bg-[#d8ff3f]/15 text-xs mono-numbers transition-all"
             >
               <Droplets className="h-3.5 w-3.5" />
               <span>Claim USDx</span>
@@ -234,8 +234,8 @@ export function TradingPanel({
             onClick={() => setIsLong(true)}
             className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${
               isLong
-                ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20"
-                : "bg-slate-900/80 text-slate-400 hover:text-white"
+                ? "bg-emerald-400 text-black shadow-lg shadow-emerald-400/10"
+                : "bg-white/[0.04] text-neutral-500 hover:bg-white/[0.08] hover:text-white"
             }`}
           >
             <ArrowUpRight className="h-4 w-4" />
@@ -245,8 +245,8 @@ export function TradingPanel({
             onClick={() => setIsLong(false)}
             className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${
               !isLong
-                ? "bg-rose-600 text-white shadow-lg shadow-rose-600/20"
-                : "bg-slate-900/80 text-slate-400 hover:text-white"
+                ? "bg-rose-500 text-white shadow-lg shadow-rose-950/30"
+                : "bg-white/[0.04] text-neutral-500 hover:bg-white/[0.08] hover:text-white"
             }`}
           >
             <ArrowDownRight className="h-4 w-4" />
@@ -267,7 +267,7 @@ export function TradingPanel({
               type="number"
               value={marginInput}
               onChange={(e) => setMarginInput(e.target.value)}
-              className="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 font-mono text-sm focus:outline-none focus:border-violet-500"
+              className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-2.5 text-slate-100 mono-numbers text-sm focus:border-[#d8ff3f] focus:outline-none"
               placeholder="500"
             />
             <span className="absolute right-4 top-2.5 text-xs font-mono text-slate-400">
@@ -291,7 +291,7 @@ export function TradingPanel({
             step="0.5"
             value={currentLevFloat}
             onChange={(e) => setLeverageInput(e.target.value)}
-            className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-violet-500"
+            className="w-full h-2 appearance-none cursor-pointer rounded-lg bg-white/10 accent-[#d8ff3f]"
           />
           <div className="flex justify-between text-[10px] text-slate-400 font-mono mt-1">
             <span>1x</span>
@@ -302,7 +302,7 @@ export function TradingPanel({
         </div>
 
         {/* Order Summary */}
-        <div className="mt-5 p-3.5 rounded-xl bg-slate-900/50 border border-slate-800 text-xs font-mono space-y-1.5">
+        <div className="mt-5 rounded-xl border border-white/10 bg-black/25 p-3.5 text-xs mono-numbers space-y-1.5">
           <div className="flex justify-between text-slate-400">
             <span>Position Notional</span>
             <span className="text-slate-100 font-semibold">{notionalSize.toFixed(2)} USDx</span>
@@ -333,7 +333,7 @@ export function TradingPanel({
             <button
               onClick={handleApprove}
               disabled={isTxPending}
-              className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-violet-600/30"
+              className="w-full py-3 rounded-xl bg-[#d8ff3f] hover:bg-[#e5ff7a] text-black font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#d8ff3f]/10"
             >
               {isTxPending && <Loader2 className="h-4 w-4 animate-spin" />}
               <span>Approve USDx for {selectedMarket === "guarded" ? "Guarded" : "Standard"} Market</span>
@@ -368,9 +368,9 @@ export function TradingPanel({
       </div>
 
       {/* Position Card */}
-      <div className="lg:col-span-6 rounded-2xl border border-slate-800 bg-[#0F1523] p-6 shadow-xl flex flex-col justify-between">
+      <div className="nyxor-card lg:col-span-6 rounded-[1.5rem] p-6 flex flex-col justify-between transition-colors">
         <div>
-          <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+          <div className="flex items-center justify-between pb-4 border-b border-white/10">
             <h3 className="font-bold text-white text-sm flex items-center gap-2">
               <span>Your Active Position</span>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300 uppercase">
