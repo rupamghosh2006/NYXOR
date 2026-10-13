@@ -221,3 +221,13 @@ For the L1 if pursued. Assumed from subnet-evm docs:
 3. **Institutional Compliance Portal (`/compliance`):** Built a real-time clearance interface interacting with the `TxAllowList` stateful precompile (`0x0200000000000000000000000000000000000002`). Allows users to inspect their institutional tier (`Role 0: Restricted`, `Role 1: Enabled`, `Role 2: Admin`) and lets the administrator grant trading clearance on-chain.
 4. **Dynamic Multi-Chain Trading Console:** Extended `Navbar`, `LiveMarketConsole`, and `TradingPanel` with multi-chain awareness. Users can seamlessly toggle between **Frozen Benchmark (Fuji)**, **Fresh Demo (Fuji)**, and **Nyxor L1 (98421)**, with automatic contract resolution and wallet network switching.
 
+---
+
+## 2026-10-13 — Simplified web navigation
+
+**Decision:** Use a quiet single-row black header: Overview, Protocol, and Risk engine remain visible; supporting product surfaces live in a two-column Explore panel; documentation and wallet connection are the only right-side actions.
+
+**Reason:** The original header presented every destination, network state, contract link, and wallet action at once. Grouping secondary routes restores hierarchy while keeping operational pages reachable in one interaction.
+
+**Reference:** The user-supplied navigation reference informed the spatial hierarchy and menu behavior only. Nyxor branding, wording, routes, and implementation remain original.
+
