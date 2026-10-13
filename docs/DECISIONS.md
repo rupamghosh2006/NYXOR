@@ -185,3 +185,13 @@ For the L1 if pursued. Assumed from subnet-evm docs:
 **Reference:** Kimia's public site informed the layout rhythm and contrast, but no branded content, imagery, or implementation was copied.
 
 **Alternatives considered:** Retaining the original dense terminal-only layout; using a generic neon-violet trading dashboard. Both make the protocol narrative and phase status less legible at first glance.
+
+---
+
+## 2026-10-13 — Multi-page web information architecture
+
+**Decision:** Replace the single-page console with focused routes: `/` (thesis and entry point), `/protocol` (architecture), `/risk` (live policy and comparison), `/evidence` (recorded Fuji scenario), `/trade` (wallet terminal), and `/demo` (admin-gated scenario controls).
+
+**Reason:** The protocol story, evidence, and execution flow are each important enough to merit dedicated navigation and clearer demo sequencing. Live chain reads remain restricted to the pages where they are useful; narrative pages do not pretend to have live execution data.
+
+**Imagery:** User-supplied public-domain/appropriately licensed artwork is stored in `apps/web/public`. The `Artwork` component shows an intentional on-brand fallback if an optional image is missing, rather than a broken asset.
