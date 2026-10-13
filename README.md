@@ -85,6 +85,18 @@ All contracts are compiled with Solidity `0.8.24`, deployed to Avalanche Fuji C-
 | **MockPriceFeedStandard** | `0x68Edd9Ae0DD51a56027Db8A67d3726a827D21634` | [Snowscan](https://testnet.snowscan.xyz/address/0x68Edd9Ae0DD51a56027Db8A67d3726a827D21634) |
 | **DemoUSDC** | `0x03933052aC03983e37a1C3E0c1cE9DD78787E4f2` | [Snowscan](https://testnet.snowscan.xyz/address/0x03933052aC03983e37a1C3E0c1cE9DD78787E4f2) |
 
+### 5.1 Sovereign Avalanche L1 & Interchain Messaging (Chain ID: 98421)
+
+In addition to the primary Fuji C-Chain benchmark, Nyxor operates a sovereign **Subnet-EVM Layer 1** on Avalanche Fuji testnet featuring native token gas (`NYX`), permissioned access control, and cross-chain messaging:
+
+- **EVM Chain ID:** `98421` (Blockchain ID: `2SrgwcLrpgt2kLrqhTr6fMaPFd1kN467ai3eaK4HcFyBq1YbaY`)
+- **Subnet ID:** `25ZDnC6Ji6JZxbPstyFiczGMJttvBUuH7KK1F2wFqLPUYQ5vo5`
+- **RPC URL:** `https://nodes-prod.43.207.73.245.sslip.io/ext/bc/2SrgwcLrpgt2kLrqhTr6fMaPFd1kN467ai3eaK4HcFyBq1YbaY/rpc`
+- **Compliance Precompile (`TxAllowList`):** Active at `0x0200000000000000000000000000000000000002` (Admin: `0x4AD14e89...`)
+- **TeleporterMessenger:** `0x253b2784c75e610dD0FF1da844684a1aC0aa5fcf`
+- **Verified Cross-Chain Message (Nyxor L1 $\to$ Fuji C-Chain):** [`0x65ed8b74f1bb021fef5c509b996a161fbd382039196b78fb551b8c6c78853095`](https://testnet.snowscan.xyz/tx/0x65ed8b74f1bb021fef5c509b996a161fbd382039196b78fb551b8c6c78853095)
+- **Full Architecture & Deployment Guide:** Documented in [`docs/nyxor_l1.md`](docs/nyxor_l1.md).
+
 ---
 
 ## 6. What Is Simulated vs. What Is Real

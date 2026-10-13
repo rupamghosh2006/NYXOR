@@ -195,3 +195,19 @@ For the L1 if pursued. Assumed from subnet-evm docs:
 **Reason:** The protocol story, evidence, and execution flow are each important enough to merit dedicated navigation and clearer demo sequencing. Live chain reads remain restricted to the pages where they are useful; narrative pages do not pretend to have live execution data.
 
 **Imagery:** User-supplied public-domain/appropriately licensed artwork is stored in `apps/web/public`. The `Artwork` component shows an intentional on-brand fallback if an optional image is missing, rather than a broken asset.
+
+---
+
+## 2026-10-13 — Sovereign Avalanche L1 & Interchain Messaging (ICM) Deployment
+
+**Decision:** Deployed and verified **Nyxor L1** (Chain ID `98421`) on Avalanche Fuji P-Chain using Avalanche Builder Console with the `TxAllowList` stateful precompile (`0x0200000000000000000000000000000000000002`), Proof of Authority consensus, and active ACP-77/ACP-99 ValidatorManager. Configured bidirectional Interchain Messaging (ICM) with a cloud-hosted relayer and broadcast verified cross-chain Warp message.
+
+**Details:**
+1. **Blockchain ID:** `2SrgwcLrpgt2kLrqhTr6fMaPFd1kN467ai3eaK4HcFyBq1YbaY`
+2. **Subnet ID:** `25ZDnC6Ji6JZxbPstyFiczGMJttvBUuH7KK1F2wFqLPUYQ5vo5`
+3. **EVM Chain ID:** `98421`
+4. **TxAllowList Precompile:** Seeded at Block 0 with Admin (`0x4AD14e89622A046803988213E4a9846756531086`). Relayer (`0x40e8484138998f777Be39DB3Baa8Ba425D5a882F`) granted Role `1` (`Enabled`) on-chain via the Builder Console Transactor Allowlist Toolbox.
+5. **TeleporterMessenger:** Deployed deterministically to `0x253b2784c75e610dD0FF1da844684a1aC0aa5fcf`.
+6. **Cross-Chain Proof:** Emitted cross-chain message `4820` from Nyxor L1 to Avalanche Fuji C-Chain (`0x65ed8b74f1bb021fef5c509b996a161fbd382039196b78fb551b8c6c78853095`).
+7. **Dual-Anchor Strategy Preserved:** Fuji C-Chain remains the permanent frozen solvency benchmark (`deployments/fuji-benchmark.json`); Nyxor L1 operates as the sovereign compliance and ICM showcase.
+

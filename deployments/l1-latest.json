@@ -1,0 +1,23 @@
+{
+  "chainName": "Nyxor L1",
+  "chainId": 98421,
+  "blockchainId": "2SrgwcLrpgt2kLrqhTr6fMaPFd1kN467ai3eaK4HcFyBq1YbaY",
+  "subnetId": "25ZDnC6Ji6JZxbPstyFiczGMJttvBUuH7KK1F2wFqLPUYQ5vo5",
+  "rpcUrl": "https://nodes-prod.43.207.73.245.sslip.io/ext/bc/2SrgwcLrpgt2kLrqhTr6fMaPFd1kN467ai3eaK4HcFyBq1YbaY/rpc",
+  "nativeToken": "NYX",
+  "status": "active_testnet_l1",
+  "deployedAt": "2026-10-13T17:55:00Z",
+  "contracts": {
+    "TxAllowListPrecompile": "0x0200000000000000000000000000000000000002",
+    "ValidatorManagerProxy": "0xfacade0000000000000000000000000000000000",
+    "ValidatorManagerImplementation": "0x0269fa1782f5ed743486091900aa24ef1c8dcada",
+    "ValidatorMessagesLibrary": "0x802508db190b1826c6fc4238b5172f344ba96811",
+    "TeleporterMessenger": "0x253b2784c75e610dD0FF1da844684a1aC0aa5fcf"
+  },
+  "interchainMessaging": {
+    "relayerAddress": "0x40e8484138998f777Be39DB3Baa8Ba425D5a882F",
+    "sourceChain": "Nyxor L1 (98421)",
+    "destinationChain": "Avalanche Fuji C-Chain (43113)",
+    "demoCrossChainTxHash": "0x65ed8b74f1bb021fef5c509b996a161fbd382039196b78fb551b8c6c78853095"
+  }
+}
