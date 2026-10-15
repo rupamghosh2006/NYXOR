@@ -40,7 +40,7 @@ const l1RpcUrl =
   process.env.NEXT_PUBLIC_L1_RPC_URL ||
   "https://nodes-prod.43.207.73.245.sslip.io/ext/bc/2SrgwcLrpgt2kLrqhTr6fMaPFd1kN467ai3eaK4HcFyBq1YbaY/rpc";
 const l1Explorer =
-  process.env.NEXT_PUBLIC_L1_EXPLORER || "https://explorer-test.avax.network";
+  process.env.NEXT_PUBLIC_L1_EXPLORER || "https://testnet.snowscan.xyz";
 const l1Name = process.env.NEXT_PUBLIC_L1_CHAIN_NAME || "Nyxor L1";
 
 export const l1Chain: Chain = {

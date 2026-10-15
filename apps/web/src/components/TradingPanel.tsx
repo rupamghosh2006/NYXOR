@@ -1,11 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowUpRight, ArrowDownRight, Droplets, AlertCircle, Check, Loader2 } from "lucide-react";
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import {
+  ArrowUpRight,
+  ArrowDownRight,
+  Droplets,
+  AlertCircle,
+  Check,
+  Loader2,
+  ShieldCheck,
+  X,
+  FileText,
+} from "lucide-react";
+import { useAccount, useWriteContract } from "wagmi";
 import { parseUnits, maxUint256 } from "viem";
 import { CONTRACT_ADDRESSES, PERP_MARKET_ABI, ERC20_ABI } from "../config/contracts";
 import { formatUsdx, formatPrice, formatLeverage } from "../lib/format";
+import { TxReceiptModal } from "./TxReceiptModal";
 
 interface PositionData {
   active: boolean;
@@ -53,6 +64,22 @@ export function TradingPanel({
   const [isTxPending, setIsTxPending] = useState(false);
   const [txMessage, setTxMessage] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
+  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
+  const [activeReceiptHash, setActiveReceiptHash] = useState<string | null>(null);
+
+  const isL1 = chainId === 98421 || (!chainId && true);
+
+  const handleTxSuccess = (hash: string, successMessage: string) => {
+    setTxHash(hash);
+    setActiveReceiptHash(hash);
+    setTxMessage(successMessage);
+    setTimeout(() => {
+      onRefresh();
+    }, 1500);
+    setTimeout(() => {
+      setTxMessage((prev) => (prev === successMessage ? null : prev));
+    }, 30000);
+  };
 
   const resolvedAddresses = addresses || CONTRACT_ADDRESSES;
   const marketAddress =
@@ -81,13 +108,7 @@ export function TradingPanel({
         functionName: "faucet",
         args: [address, parseUnits("5000", 6)],
       });
-      setTxHash(hash);
-      setTxMessage(`Minted! Tx: ${hash.slice(0, 10)}...`);
-      setTimeout(() => {
-        setTxMessage(null);
-        setTxHash(null);
-        onRefresh();
-      }, 5000);
+      handleTxSuccess(hash, `Minted 5,000 USDx! Tx: ${hash.slice(0, 10)}...`);
     } catch (err: any) {
       setTxMessage(`Error: ${err.shortMessage || err.message}`);
     } finally {
@@ -106,13 +127,7 @@ export function TradingPanel({
         functionName: "approve",
         args: [marketAddress, maxUint256],
       });
-      setTxHash(hash);
-      setTxMessage(`Approved! Tx: ${hash.slice(0, 10)}...`);
-      setTimeout(() => {
-        setTxMessage(null);
-        setTxHash(null);
-        onRefresh();
-      }, 5000);
+      handleTxSuccess(hash, `Approved USDx Collateral! Tx: ${hash.slice(0, 10)}...`);
     } catch (err: any) {
       setTxMessage(`Error: ${err.shortMessage || err.message}`);
     } finally {
@@ -136,13 +151,7 @@ export function TradingPanel({
         functionName: "openPosition",
         args: [isLong, marginBigInt, levX100],
       });
-      setTxHash(hash);
-      setTxMessage(`Position Opened! Tx: ${hash.slice(0, 10)}...`);
-      setTimeout(() => {
-        setTxMessage(null);
-        setTxHash(null);
-        onRefresh();
-      }, 5000);
+      handleTxSuccess(hash, `Position Opened! Tx: ${hash.slice(0, 10)}...`);
     } catch (err: any) {
       setTxMessage(`Error: ${err.shortMessage || err.message}`);
     } finally {
@@ -160,13 +169,7 @@ export function TradingPanel({
         abi: PERP_MARKET_ABI,
         functionName: "closePosition",
       });
-      setTxHash(hash);
-      setTxMessage(`Position Closed! Tx: ${hash.slice(0, 10)}...`);
-      setTimeout(() => {
-        setTxMessage(null);
-        setTxHash(null);
-        onRefresh();
-      }, 5000);
+      handleTxSuccess(hash, `Position Closed! Tx: ${hash.slice(0, 10)}...`);
     } catch (err: any) {
       setTxMessage(`Error: ${err.shortMessage || err.message}`);
     } finally {
@@ -186,13 +189,7 @@ export function TradingPanel({
         functionName: "addMargin",
         args: [addBigInt],
       });
-      setTxHash(hash);
-      setTxMessage(`Margin added! Tx: ${hash.slice(0, 10)}...`);
-      setTimeout(() => {
-        setTxMessage(null);
-        setTxHash(null);
-        onRefresh();
-      }, 5000);
+      handleTxSuccess(hash, `Margin Added! Tx: ${hash.slice(0, 10)}...`);
     } catch (err: any) {
       setTxMessage(`Error: ${err.shortMessage || err.message}`);
     } finally {
@@ -201,7 +198,72 @@ export function TradingPanel({
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <div className="space-y-4">
+      {/* Prominent Transaction Notification & Receipt Banner */}
+      {txMessage && (
+        <div
+          className={`p-4 rounded-2xl border flex flex-wrap items-center justify-between gap-3 text-xs font-mono shadow-xl transition-all ${
+            txMessage.startsWith("Error")
+              ? "bg-rose-950/40 border-rose-800/60 text-rose-300"
+              : "bg-emerald-950/40 border-emerald-500/30 text-emerald-300"
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            <span
+              className={`h-2.5 w-2.5 rounded-full ${
+                txMessage.startsWith("Error")
+                  ? "bg-rose-400"
+                  : "bg-emerald-400 animate-pulse"
+              }`}
+            />
+            <span className="font-sans font-medium text-white">{txMessage}</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {txHash && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveReceiptHash(txHash);
+                    setIsReceiptModalOpen(true);
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-violet-500/20 hover:bg-violet-500/30 border border-violet-500/40 text-violet-200 hover:text-white font-sans text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer"
+                >
+                  <ShieldCheck className="h-3.5 w-3.5 text-violet-400" />
+                  <span>{isL1 ? "View L1 On-Chain Receipt" : "Inspect Receipt"}</span>
+                </button>
+
+                {!isL1 && (
+                  <a
+                    href={`https://testnet.snowscan.xyz/tx/${txHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-sans text-xs font-semibold inline-flex items-center gap-1.5 transition"
+                  >
+                    <span>View on Snowscan</span>
+                    <ArrowUpRight className="h-3.5 w-3.5 text-neutral-400" />
+                  </a>
+                )}
+              </>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                setTxMessage(null);
+                setTxHash(null);
+              }}
+              className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10 transition"
+              title="Dismiss notification"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       {/* Trading Form */}
       <div className="nyxor-card lg:col-span-6 rounded-[1.5rem] p-6 transition-colors">
         {/* Market Selector Tabs */}
@@ -377,14 +439,27 @@ export function TradingPanel({
             <div className="mt-2 text-center text-xs font-mono text-cyan-300 flex items-center justify-center gap-1.5 flex-wrap">
               <span>{txMessage}</span>
               {txHash && (
-                <a
-                  href={`${chainId === 98421 ? "https://explorer-test.avax.network" : "https://testnet.snowscan.xyz"}/tx/${txHash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline text-white hover:text-cyan-200 inline-flex items-center gap-0.5 ml-1"
-                >
-                  View on Explorer <ArrowUpRight className="h-3 w-3" />
-                </a>
+                isL1 ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveReceiptHash(txHash);
+                      setIsReceiptModalOpen(true);
+                    }}
+                    className="underline text-white hover:text-cyan-200 inline-flex items-center gap-1 ml-1 cursor-pointer font-sans"
+                  >
+                    View L1 Receipt <ShieldCheck className="h-3.5 w-3.5 text-violet-300" />
+                  </button>
+                ) : (
+                  <a
+                    href={`https://testnet.snowscan.xyz/tx/${txHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline text-white hover:text-cyan-200 inline-flex items-center gap-0.5 ml-1"
+                  >
+                    View on Snowscan <ArrowUpRight className="h-3 w-3" />
+                  </a>
+                )
               )}
             </div>
           )}
@@ -510,5 +585,13 @@ export function TradingPanel({
         )}
       </div>
     </div>
-  );
+
+    <TxReceiptModal
+      isOpen={isReceiptModalOpen}
+      onClose={() => setIsReceiptModalOpen(false)}
+      txHash={activeReceiptHash}
+      chainId={chainId}
+    />
+  </div>
+);
 }

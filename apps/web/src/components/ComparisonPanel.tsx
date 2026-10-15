@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertOctagon, ShieldCheck, ExternalLink, HelpCircle, Info } from "lucide-react";
+import { useAccount } from "wagmi";
 import { formatUsdx, formatLeverage, formatPrice } from "../lib/format";
 import { CONTRACT_ADDRESSES } from "../config/contracts";
 
@@ -22,6 +23,8 @@ interface ComparisonPanelProps {
 }
 
 export function ComparisonPanel({ standard, guarded, phase }: ComparisonPanelProps) {
+  const { chainId } = useAccount();
+  const isL1 = chainId === 98421;
   const standardBadDebtNum = standard.badDebtTotal ? Number(standard.badDebtTotal) / 1e6 : 0;
   const guardedBadDebtNum = guarded.badDebtTotal ? Number(guarded.badDebtTotal) / 1e6 : 0;
   const scenarioExecuted = standardBadDebtNum > 0 || guardedBadDebtNum > 0;
@@ -73,7 +76,7 @@ export function ComparisonPanel({ standard, guarded, phase }: ComparisonPanelPro
               target="_blank"
               rel="noreferrer"
               className="text-slate-400 hover:text-slate-200 transition-colors"
-              title="View on Snowscan"
+              title="View contract on Snowscan"
             >
               <ExternalLink className="h-4 w-4" />
             </a>
@@ -187,7 +190,7 @@ export function ComparisonPanel({ standard, guarded, phase }: ComparisonPanelPro
               target="_blank"
               rel="noreferrer"
               className="text-slate-400 hover:text-slate-200 transition-colors"
-              title="View on Snowscan"
+              title="View contract on Snowscan"
             >
               <ExternalLink className="h-4 w-4" />
             </a>

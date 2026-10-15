@@ -189,7 +189,7 @@ export function Navbar() {
         target="_blank"
         rel="noopener noreferrer"
         className="flex h-12 items-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-3 text-[11px] mono-numbers text-neutral-100 transition hover:border-white/30 hover:bg-white/[0.06]"
-        title="View on Snowscan testnet explorer"
+        title="View address on Snowscan testnet explorer"
       >
         <span className="signal-dot" />
         {shortenAddress(address)}

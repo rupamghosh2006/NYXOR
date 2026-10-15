@@ -11,7 +11,13 @@ export const wagmiConfig = createConfig({
       webSocket("wss://api.avax-test.network/ext/bc/C/ws"),
       ...FUJI_PUBLIC_RPCS.map((url) => http(url)),
     ]),
-    ...(l1Chain ? { [l1Chain.id]: http(l1Chain.rpcUrls.default.http[0]) } : {}),
+    ...(l1Chain
+      ? {
+          [l1Chain.id]: http(l1Chain.rpcUrls.default.http[0], {
+            batch: { batchSize: 30, wait: 60 },
+          }),
+        }
+      : {}),
   },
   ssr: true,
 });
