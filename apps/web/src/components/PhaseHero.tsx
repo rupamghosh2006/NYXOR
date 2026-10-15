@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
 import { Shield, Clock, AlertTriangle, CheckCircle2, Lock, Flame } from "lucide-react";
 import { formatDuration, formatLeverage, formatUtcTime } from "../lib/format";
 
@@ -22,6 +23,86 @@ export function PhaseHero({
   guardedReduceOnly,
   demoMode,
 }: PhaseHeroProps) {
+  // Smooth continuous anchored time ticker (completely immune to background polling resets)
+  const [displaySecondsToClose, setDisplaySecondsToClose] = useState<bigint | undefined>(secondsToClose);
+  const [displayEffectiveNow, setDisplayEffectiveNow] = useState<bigint | undefined>(effectiveNow);
+  const [displaySecondsSinceOpen, setDisplaySecondsSinceOpen] = useState<bigint | undefined>(secondsSinceOpen);
+  const anchorRef = useRef<{
+    onChainEffective: number;
+    onChainToClose: number;
+    onChainSinceOpen: number;
+    localAnchor: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (effectiveNow !== undefined) {
+      const nowMs = Date.now();
+      const effNum = Number(effectiveNow);
+      const closeNum = secondsToClose !== undefined ? Number(secondsToClose) : 0;
+      const openNum = secondsSinceOpen !== undefined ? Number(secondsSinceOpen) : 0;
+
+      if (!anchorRef.current) {
+        anchorRef.current = {
+          onChainEffective: effNum,
+          onChainToClose: closeNum,
+          onChainSinceOpen: openNum,
+          localAnchor: nowMs,
+        };
+        setDisplayEffectiveNow(effectiveNow);
+        setDisplaySecondsToClose(secondsToClose);
+        setDisplaySecondsSinceOpen(secondsSinceOpen);
+      } else {
+        // If secondsToClose arrived in subsequent query
+        if (closeNum > 0 && anchorRef.current.onChainToClose === 0) {
+          anchorRef.current.onChainToClose = closeNum;
+          anchorRef.current.localAnchor = nowMs;
+          setDisplaySecondsToClose(secondsToClose);
+        }
+        if (openNum > 0 && anchorRef.current.onChainSinceOpen === 0) {
+          anchorRef.current.onChainSinceOpen = openNum;
+          setDisplaySecondsSinceOpen(secondsSinceOpen);
+        }
+
+        const elapsedSinceAnchor = Math.floor((nowMs - anchorRef.current.localAnchor) / 1000);
+        const expectedEffective = anchorRef.current.onChainEffective + elapsedSinceAnchor;
+        // Only resync if there was an actual jump (e.g. admin time travel > 4s), never on normal polling
+        if (Math.abs(effNum - expectedEffective) > 4) {
+          anchorRef.current = {
+            onChainEffective: effNum,
+            onChainToClose: closeNum,
+            onChainSinceOpen: openNum,
+            localAnchor: nowMs,
+          };
+          setDisplayEffectiveNow(effectiveNow);
+          setDisplaySecondsToClose(secondsToClose);
+          setDisplaySecondsSinceOpen(secondsSinceOpen);
+        }
+      }
+    }
+  }, [effectiveNow, secondsToClose, secondsSinceOpen]);
+
+  // Smooth uninterrupted 1000ms clock heartbeat
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (anchorRef.current) {
+        const elapsed = Math.floor((Date.now() - anchorRef.current.localAnchor) / 1000);
+        const currentEff = BigInt(anchorRef.current.onChainEffective + elapsed);
+        setDisplayEffectiveNow(currentEff);
+
+        if (anchorRef.current.onChainToClose > 0) {
+          const remaining = anchorRef.current.onChainToClose - elapsed;
+          setDisplaySecondsToClose(remaining > 0 ? BigInt(remaining) : 0n);
+        }
+
+        if (anchorRef.current.onChainSinceOpen > 0) {
+          setDisplaySecondsSinceOpen(BigInt(anchorRef.current.onChainSinceOpen + elapsed));
+        }
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
   // Phase mapping
   const phaseConfig = [
     {
@@ -72,16 +153,20 @@ export function PhaseHero({
 
   const Icon = phaseConfig.icon;
 
-  // Countdown interpretation
+  // Countdown interpretation with active fallback
+  const activeSecondsToClose = displaySecondsToClose ?? secondsToClose;
+  const activeSecondsSinceOpen = displaySecondsSinceOpen ?? secondsSinceOpen;
+  const activeEffectiveNow = displayEffectiveNow ?? effectiveNow;
+
   let countdownText = "--";
   let countdownSub = "";
   if (phase === 0) {
     // OPEN: countdown to close
-    countdownText = `T - ${formatDuration(secondsToClose)}`;
+    countdownText = `T - ${formatDuration(activeSecondsToClose)}`;
     countdownSub = "until session close";
   } else if (phase === 1) {
     // PRE_CLOSE: countdown to close
-    countdownText = `T - ${formatDuration(secondsToClose)}`;
+    countdownText = `T - ${formatDuration(activeSecondsToClose)}`;
     countdownSub = "until market closes";
   } else if (phase === 2) {
     // CLOSED: waiting for reopen
@@ -89,7 +174,7 @@ export function PhaseHero({
     countdownSub = "reopens Mon 14:30 UTC";
   } else if (phase === 3) {
     // REOPEN_COOLDOWN: 900s - secondsSinceOpen
-    const cooldownLeft = 900n > (secondsSinceOpen || 0n) ? 900n - (secondsSinceOpen || 0n) : 0n;
+    const cooldownLeft = 900n > (activeSecondsSinceOpen || 0n) ? 900n - (activeSecondsSinceOpen || 0n) : 0n;
     countdownText = `T - ${formatDuration(cooldownLeft)}`;
     countdownSub = "cooldown remaining";
   }
@@ -137,10 +222,16 @@ export function PhaseHero({
         </div>
 
         {/* Dynamic Countdown & Simulated Clock */}
-        <div className="md:col-span-1 flex flex-col items-start md:items-center justify-center rounded-2xl border border-white/10 bg-black/30 p-4">
-          <div className="eyebrow flex items-center gap-1.5 text-neutral-500 mb-2">
-            <Clock className="h-3.5 w-3.5 text-[#d8ff3f]" />
-            <span>Simulated Market Clock</span>
+        <div className="md:col-span-1 flex flex-col items-start md:items-center justify-center rounded-2xl border border-white/10 bg-black/40 p-5 shadow-inner">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">
+              <Clock className="h-3.5 w-3.5 text-[#d8ff3f]" />
+              <span>Simulated Clock</span>
+            </div>
+            <span className="flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-mono text-emerald-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
+              Live
+            </span>
             {demoMode && (
               <span className="rounded-full border border-[#d8ff3f]/30 bg-[#d8ff3f]/10 px-1.5 py-0.5 text-[9px] text-[#d8ff3f] mono-numbers">
                 DEMO
@@ -148,13 +239,14 @@ export function PhaseHero({
             )}
           </div>
 
-          <div className="mono-numbers text-2xl font-bold text-white tracking-tight">
+          <div className="mono-numbers text-3xl font-extrabold text-[#d8ff3f] tracking-tight tabular-nums drop-shadow-[0_0_12px_rgba(216,255,63,0.3)]">
             {countdownText}
           </div>
-          <div className="mt-0.5 text-xs text-neutral-500 mono-numbers">{countdownSub}</div>
+          <div className="mt-1 text-[11px] uppercase tracking-wider text-neutral-400 font-mono font-medium">{countdownSub}</div>
 
-          <div className="mt-3 rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] text-neutral-500 mono-numbers">
-            {formatUtcTime(effectiveNow)}
+          <div className="mt-3.5 flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-neutral-300 mono-numbers tabular-nums shadow-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
+            <span>{formatUtcTime(activeEffectiveNow)}</span>
           </div>
         </div>
 

@@ -184,10 +184,17 @@ export function Navbar() {
         )}
       </div>
 
-      <div className="flex h-12 items-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-3 text-[11px] mono-numbers text-neutral-100">
+      <a
+        href={address ? `https://testnet.snowscan.xyz/address/${address}` : "#"}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex h-12 items-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-3 text-[11px] mono-numbers text-neutral-100 transition hover:border-white/30 hover:bg-white/[0.06]"
+        title="View on Snowscan testnet explorer"
+      >
         <span className="signal-dot" />
         {shortenAddress(address)}
-      </div>
+        <ArrowUpRight className="h-3 w-3 text-neutral-400" />
+      </a>
       <button
         onClick={() => disconnect()}
         className="hidden h-12 rounded-xl border border-white/10 px-3 text-[11px] text-neutral-500 transition hover:border-white/25 hover:text-white sm:inline-flex sm:items-center"

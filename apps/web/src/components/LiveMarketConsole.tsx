@@ -66,7 +66,7 @@ export function LiveMarketConsole({ view }: { view: ConsoleView }) {
       { address: addresses.PerpMarketGuarded, abi: PERP_MARKET_ABI, functionName: "totalOiLongUsd" },
       { address: addresses.PerpMarketGuarded, abi: PERP_MARKET_ABI, functionName: "totalOiShortUsd" },
     ],
-    query: { refetchInterval: 4000 },
+    query: { refetchInterval: 12000 },
   });
 
   const effectiveNow = coreData?.[0]?.result as bigint | undefined;
@@ -81,7 +81,7 @@ export function LiveMarketConsole({ view }: { view: ConsoleView }) {
       { address: addresses.MarketHoursRiskPolicy, abi: RISK_POLICY_ABI, functionName: "getParams", args: [tsForPolicy] },
       { address: addresses.FlatRiskPolicy, abi: RISK_POLICY_ABI, functionName: "getParams", args: [tsForPolicy] },
     ],
-    query: { refetchInterval: 4000 },
+    query: { refetchInterval: 12000 },
   });
 
   const phaseResult = scheduleData?.[0]?.result as [number, bigint, bigint] | undefined;
@@ -103,7 +103,7 @@ export function LiveMarketConsole({ view }: { view: ConsoleView }) {
           { address: currentMarketAddress, abi: PERP_MARKET_ABI, functionName: "getLiquidationPrice", args: [address] },
         ]
       : [],
-    query: { enabled: !!address, refetchInterval: 4000 },
+    query: { enabled: !!address, refetchInterval: 12000 },
   });
 
   const rawPosition = userData?.[2]?.result as any;

@@ -1,4 +1,4 @@
-import { http, createConfig, injected, fallback } from "wagmi";
+import { http, webSocket, createConfig, injected, fallback } from "wagmi";
 import { fujiChain, l1Chain, supportedChains, FUJI_PUBLIC_RPCS } from "./chains";
 
 export const wagmiConfig = createConfig({
@@ -7,7 +7,10 @@ export const wagmiConfig = createConfig({
     injected(),
   ],
   transports: {
-    [fujiChain.id]: fallback(FUJI_PUBLIC_RPCS.map((url) => http(url))),
+    [fujiChain.id]: fallback([
+      webSocket("wss://api.avax-test.network/ext/bc/C/ws"),
+      ...FUJI_PUBLIC_RPCS.map((url) => http(url)),
+    ]),
     ...(l1Chain ? { [l1Chain.id]: http(l1Chain.rpcUrls.default.http[0]) } : {}),
   },
   ssr: true,

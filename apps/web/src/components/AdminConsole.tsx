@@ -137,6 +137,50 @@ export function AdminConsole({ isAdmin, onRefresh, addresses }: AdminConsoleProp
     }
   };
 
+  // Refresh feeds with current price to keep them fresh
+  const handleRefreshFeeds = async () => {
+    try {
+      setIsTxPending(true);
+      setStatusMsg("Refreshing Guarded oracle price feed...");
+      const currentGuarded = await publicClient?.readContract({
+        address: resolvedAddresses.MockPriceFeedGuarded,
+        abi: PRICE_FEED_ABI,
+        functionName: "latestPrice",
+      });
+      if (currentGuarded) {
+        await writeContractAsync({
+          address: resolvedAddresses.MockPriceFeedGuarded,
+          abi: PRICE_FEED_ABI,
+          functionName: "setPrice",
+          args: [(currentGuarded as [bigint, bigint])[0]],
+        });
+      }
+      setStatusMsg("Refreshing Standard oracle price feed...");
+      const currentStandard = await publicClient?.readContract({
+        address: resolvedAddresses.MockPriceFeedStandard,
+        abi: PRICE_FEED_ABI,
+        functionName: "latestPrice",
+      });
+      if (currentStandard) {
+        await writeContractAsync({
+          address: resolvedAddresses.MockPriceFeedStandard,
+          abi: PRICE_FEED_ABI,
+          functionName: "setPrice",
+          args: [(currentStandard as [bigint, bigint])[0]],
+        });
+      }
+      setStatusMsg("Oracle Feeds Fresh!");
+      setTimeout(() => {
+        setStatusMsg(null);
+        onRefresh();
+      }, 3000);
+    } catch (err: any) {
+      setStatusMsg(`Error: ${err.shortMessage || err.message}`);
+    } finally {
+      setIsTxPending(false);
+    }
+  };
+
   // Deleverage target trader
   const handleDeleverageTrader = async () => {
     if (!traderToDeleverage) return;
@@ -261,7 +305,7 @@ export function AdminConsole({ isAdmin, onRefresh, addresses }: AdminConsoleProp
               <Zap className="h-3.5 w-3.5 text-amber-400" />
               <span>Simulated Oracle Gap Shocks</span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
               <button
                 onClick={() => handleShock(-800)}
                 disabled={isTxPending}
@@ -278,6 +322,16 @@ export function AdminConsole({ isAdmin, onRefresh, addresses }: AdminConsoleProp
               >
                 <RefreshCw className="h-4 w-4" />
                 <span>Checkpoint Official Close</span>
+              </button>
+
+              <button
+                onClick={handleRefreshFeeds}
+                disabled={isTxPending}
+                className="py-2.5 px-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-emerald-500 text-slate-200 text-xs font-mono font-bold transition-all flex items-center justify-center gap-2"
+                title="Sync oracle feed timestamps to current clock"
+              >
+                <RefreshCw className="h-4 w-4 text-emerald-400" />
+                <span>Sync Oracle Timestamps</span>
               </button>
 
               <div className="flex gap-2">

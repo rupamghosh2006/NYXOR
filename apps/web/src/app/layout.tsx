@@ -5,6 +5,11 @@ import { Providers } from "./providers";
 export const metadata: Metadata = {
   title: "Nyxor Protocol | Market-Hours-Aware Risk Layer",
   description: "The market closes on Friday. Your risk shouldn't. Dynamic risk, pre-close deleveraging, and gap protection for RWA perpetuals on Avalanche.",
+  icons: {
+    icon: "/nyxor-mark.png",
+    shortcut: "/nyxor-mark.png",
+    apple: "/nyxor-mark.png",
+  },
 };
 
 export default function RootLayout({

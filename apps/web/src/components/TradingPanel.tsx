@@ -43,7 +43,7 @@ export function TradingPanel({
   onRefresh,
   addresses,
 }: TradingPanelProps) {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chainId } = useAccount();
   const [isLong, setIsLong] = useState(true);
   const [marginInput, setMarginInput] = useState("500");
   const [leverageInput, setLeverageInput] = useState("10");
@@ -52,6 +52,7 @@ export function TradingPanel({
   const { writeContractAsync } = useWriteContract();
   const [isTxPending, setIsTxPending] = useState(false);
   const [txMessage, setTxMessage] = useState<string | null>(null);
+  const [txHash, setTxHash] = useState<string | null>(null);
 
   const resolvedAddresses = addresses || CONTRACT_ADDRESSES;
   const marketAddress =
@@ -77,14 +78,16 @@ export function TradingPanel({
       const hash = await writeContractAsync({
         address: resolvedAddresses.DemoUSDC,
         abi: ERC20_ABI,
-        functionName: "mint",
+        functionName: "faucet",
         args: [address, parseUnits("5000", 6)],
       });
+      setTxHash(hash);
       setTxMessage(`Minted! Tx: ${hash.slice(0, 10)}...`);
       setTimeout(() => {
         setTxMessage(null);
+        setTxHash(null);
         onRefresh();
-      }, 3000);
+      }, 5000);
     } catch (err: any) {
       setTxMessage(`Error: ${err.shortMessage || err.message}`);
     } finally {
@@ -103,11 +106,13 @@ export function TradingPanel({
         functionName: "approve",
         args: [marketAddress, maxUint256],
       });
+      setTxHash(hash);
       setTxMessage(`Approved! Tx: ${hash.slice(0, 10)}...`);
       setTimeout(() => {
         setTxMessage(null);
+        setTxHash(null);
         onRefresh();
-      }, 3000);
+      }, 5000);
     } catch (err: any) {
       setTxMessage(`Error: ${err.shortMessage || err.message}`);
     } finally {
@@ -131,11 +136,13 @@ export function TradingPanel({
         functionName: "openPosition",
         args: [isLong, marginBigInt, levX100],
       });
+      setTxHash(hash);
       setTxMessage(`Position Opened! Tx: ${hash.slice(0, 10)}...`);
       setTimeout(() => {
         setTxMessage(null);
+        setTxHash(null);
         onRefresh();
-      }, 3000);
+      }, 5000);
     } catch (err: any) {
       setTxMessage(`Error: ${err.shortMessage || err.message}`);
     } finally {
@@ -153,11 +160,13 @@ export function TradingPanel({
         abi: PERP_MARKET_ABI,
         functionName: "closePosition",
       });
+      setTxHash(hash);
       setTxMessage(`Position Closed! Tx: ${hash.slice(0, 10)}...`);
       setTimeout(() => {
         setTxMessage(null);
+        setTxHash(null);
         onRefresh();
-      }, 3000);
+      }, 5000);
     } catch (err: any) {
       setTxMessage(`Error: ${err.shortMessage || err.message}`);
     } finally {
@@ -177,11 +186,13 @@ export function TradingPanel({
         functionName: "addMargin",
         args: [addBigInt],
       });
+      setTxHash(hash);
       setTxMessage(`Margin added! Tx: ${hash.slice(0, 10)}...`);
       setTimeout(() => {
         setTxMessage(null);
+        setTxHash(null);
         onRefresh();
-      }, 3000);
+      }, 5000);
     } catch (err: any) {
       setTxMessage(`Error: ${err.shortMessage || err.message}`);
     } finally {
@@ -363,8 +374,18 @@ export function TradingPanel({
           )}
 
           {txMessage && (
-            <div className="mt-2 text-center text-xs font-mono text-cyan-300">
-              {txMessage}
+            <div className="mt-2 text-center text-xs font-mono text-cyan-300 flex items-center justify-center gap-1.5 flex-wrap">
+              <span>{txMessage}</span>
+              {txHash && (
+                <a
+                  href={`${chainId === 98421 ? "https://explorer-test.avax.network" : "https://testnet.snowscan.xyz"}/tx/${txHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline text-white hover:text-cyan-200 inline-flex items-center gap-0.5 ml-1"
+                >
+                  View on Explorer <ArrowUpRight className="h-3 w-3" />
+                </a>
+              )}
             </div>
           )}
         </div>
