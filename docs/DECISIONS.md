@@ -203,8 +203,8 @@ For the L1 if pursued. Assumed from subnet-evm docs:
 **Decision:** Deployed and verified **Nyxor L1** (Chain ID `98421`) on Avalanche Fuji P-Chain using Avalanche Builder Console with the `TxAllowList` stateful precompile (`0x0200000000000000000000000000000000000002`), Proof of Authority consensus, and active ACP-77/ACP-99 ValidatorManager. Configured bidirectional Interchain Messaging (ICM) with a cloud-hosted relayer and broadcast verified cross-chain Warp message.
 
 **Details:**
-1. **Blockchain ID:** `2SrgwcLrpgt2kLrqhTr6fMaPFd1kN467ai3eaK4HcFyBq1YbaY`
-2. **Subnet ID:** `25ZDnC6Ji6JZxbPstyFiczGMJttvBUuH7KK1F2wFqLPUYQ5vo5`
+1. **Blockchain ID:** `2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS`
+2. **Subnet ID:** `2rXbQTjPnXKnRpogaLshYEmYfnLFahCgJ5gfuJ4dciHvJb6A9j`
 3. **EVM Chain ID:** `98421`
 4. **TxAllowList Precompile:** Seeded at Block 0 with Admin (`0x4AD14e89622A046803988213E4a9846756531086`). Relayer (`0x40e8484138998f777Be39DB3Baa8Ba425D5a882F`) granted Role `1` (`Enabled`) on-chain via the Builder Console Transactor Allowlist Toolbox.
 5. **TeleporterMessenger:** Deployed deterministically to `0x253b2784c75e610dD0FF1da844684a1aC0aa5fcf`.

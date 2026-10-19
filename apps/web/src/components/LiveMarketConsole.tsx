@@ -214,7 +214,9 @@ export function LiveMarketConsole({ view }: { view: ConsoleView }) {
         />
       )}
 
-      {view === "demo" && <AdminConsole isAdmin={isAdmin} onRefresh={handleRefreshAll} addresses={addresses} />}
+      {(view === "demo" || isAdmin) && (
+        <AdminConsole isAdmin={isAdmin} onRefresh={handleRefreshAll} addresses={addresses} />
+      )}
     </div>
   );
 }

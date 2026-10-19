@@ -17,6 +17,7 @@ import { parseUnits, maxUint256 } from "viem";
 import { CONTRACT_ADDRESSES, PERP_MARKET_ABI, ERC20_ABI } from "../config/contracts";
 import { formatUsdx, formatPrice, formatLeverage } from "../lib/format";
 import { TxReceiptModal } from "./TxReceiptModal";
+import { getExplorerTxUrl } from "../config/chains";
 
 interface PositionData {
   active: boolean;
@@ -440,16 +441,29 @@ export function TradingPanel({
               <span>{txMessage}</span>
               {txHash && (
                 isL1 ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveReceiptHash(txHash);
-                      setIsReceiptModalOpen(true);
-                    }}
-                    className="underline text-white hover:text-cyan-200 inline-flex items-center gap-1 ml-1 cursor-pointer font-sans"
-                  >
-                    View L1 Receipt <ShieldCheck className="h-3.5 w-3.5 text-violet-300" />
-                  </button>
+                  <div className="inline-flex items-center gap-2 mt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveReceiptHash(txHash);
+                        setIsReceiptModalOpen(true);
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-violet-500/20 hover:bg-violet-500/30 border border-violet-500/40 text-violet-200 text-xs font-semibold inline-flex items-center gap-1 cursor-pointer font-sans transition"
+                    >
+                      <ShieldCheck className="h-3.5 w-3.5 text-violet-300" />
+                      <span>Inspect Verified L1 Receipt</span>
+                    </button>
+                    <a
+                      href={getExplorerTxUrl(txHash, 98421)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-neutral-400 hover:text-white inline-flex items-center gap-0.5 text-[11px] font-sans underline"
+                      title="Nyxor L1 Explorer"
+                    >
+                      <span>Avalanche Explorer</span>
+                      <ArrowUpRight className="h-3 w-3" />
+                    </a>
+                  </div>
                 ) : (
                   <a
                     href={`https://testnet.snowscan.xyz/tx/${txHash}`}

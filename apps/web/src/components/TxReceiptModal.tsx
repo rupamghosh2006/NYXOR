@@ -16,6 +16,7 @@ import {
   Fuel,
 } from "lucide-react";
 import { formatUnits } from "viem";
+import { getExplorerTxUrl } from "../config/chains";
 
 interface TxReceiptModalProps {
   isOpen: boolean;
@@ -40,25 +41,29 @@ interface ReceiptData {
 }
 
 const L1_RPC_URL =
-  "https://nodes-prod.43.207.73.245.sslip.io/ext/bc/2SrgwcLrpgt2kLrqhTr6fMaPFd1kN467ai3eaK4HcFyBq1YbaY/rpc";
+  process.env.NEXT_PUBLIC_L1_RPC_URL ||
+  process.env.NEXT_PUBLIC_L1_RPC ||
+  "https://nodes-prod.43.207.73.245.sslip.io/ext/bc/2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS/rpc";
 const FUJI_RPC_URL = "https://api.avax-test.network/ext/bc/C/rpc";
 
 const KNOWN_CONTRACTS: Record<string, string> = {
-  // Nyxor L1 contracts
-  "0x400d575b8be7a395fbf4bc8161a4a454605730c7": "DemoUSDC (USDx Margin Asset)",
-  "0x9702513f37ec899e21126a80f2ac94bba9839084": "MarketClock (Trading Hours Engine)",
-  "0x0118df8b09e771ba81ebb8efe40db54c0c64355d": "MarketSchedule (Weekend Risk Schedule)",
-  "0xb327745d1e019ab373c4901c5cae0334411093b8": "MockPriceFeedStandard (Unmanaged)",
-  "0xf0bae412d7915d4dd961303aa99e528233d22d8a": "MockPriceFeedGuarded (Checkpointing)",
-  "0x3c25146e0ebd05c521c3216d530d4a63455769f9": "FlatRiskPolicy (Static 20x)",
-  "0x7552437ac5b5a7f4b464f70fa3df880f13d05fe8": "MarketHoursRiskPolicy (Dynamic Risk)",
-  "0x459b6f740fbaced4a8955fd7f724dab77acbc798": "LiquidityVaultStandard (Standard LP)",
-  "0x5c844fd4681db6e8648a382d17cedb3e0e441218": "LiquidityVaultGuarded (Guarded LP)",
-  "0x180bb88cc7f1fb69ae6e3a02ffec82481322995a": "PerpMarketStandard (Naive Market)",
-  "0xae9fbde08aa7f4f03c409319ea78749ed0390749": "PerpMarketGuarded (Nyxor Guarded)",
+  // Nyxor L1 contracts (Active)
+  "0x802508db190b1826c6fc4238b5172f344ba96811": "DemoUSDC (USDx Margin Asset)",
+  "0x0269fa1782f5ed743486091900aa24ef1c8dcada": "MarketClock (Trading Hours Engine)",
+  "0x3f5560b462dc91339faaeacde7a0e98d26a20aab": "MarketSchedule (Weekend Risk Schedule)",
+  "0x7f7b80959f30a06d3f066b8b63b065b02ad1a4d7": "MockPriceFeedStandard (Unmanaged)",
+  "0x66ac4ab263b69be7003089be185a202a9e981fca": "MockPriceFeedGuarded (Checkpointing)",
+  "0x4341d3a566ac6e0e51076b9fef68efe3ca5e047f": "FlatRiskPolicy (Static 20x)",
+  "0x820be01587cfd1f9c6d46cb363f09d5c9dcae974": "MarketHoursRiskPolicy (Dynamic Risk)",
+  "0x4c38297282959b86482b10d59210c3f2df84b659": "LiquidityVaultStandard (Standard LP)",
+  "0x648b16f94c1ff3776368d8bc067b5f8881ce6cfd": "LiquidityVaultGuarded (Guarded LP)",
+  "0x2268c8cb67e1cd78ca4ab254894bb5f5d1e23fab": "PerpMarketStandard (Naive Market)",
+  "0x400d575b8be7a395fbf4bc8161a4a454605730c7": "PerpMarketGuarded (Nyxor Guarded)",
+  // Precompiles & Infrastructure
   "0x0200000000000000000000000000000000000002": "TxAllowList Precompile (Mempool Guard)",
   "0x253b2784c75e610dd0ff1da844684a1ac0aa5fcf": "TeleporterMessenger (Native ICM)",
-  "0x40e8484138998f777be39db3baa8ba425d5a882f": "Nyxor Cloud Relayer (AWM Teleporter)",
+  "0x05c474824e7d2cc67cf22b456f7cf60c0e3a1289": "TeleporterSender (Nyxor L1 Warp Origin)",
+  "0xd8b6b037b75b6605c34bf6b7f4dd0e93f40f1af7": "TeleporterReceiver (Fuji C-Chain Destination)",
   "0x4ad14e89622a046803988213e4a9846756531086": "Deployer / Risk Administrator",
 };
 
@@ -370,9 +375,19 @@ export function TxReceiptModal({
                 </div>
               )}
 
-              {/* Fuji External Link Option */}
-              {!isL1 && (
-                <div className="pt-2">
+              {/* External Explorer Link */}
+              <div className="pt-2">
+                {isL1 ? (
+                  <a
+                    href={getExplorerTxUrl(receipt.transactionHash, 98421)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full py-2.5 rounded-xl border border-[#d8ff3f]/40 bg-[#d8ff3f]/10 hover:bg-[#d8ff3f]/20 text-[#d8ff3f] text-xs font-semibold flex items-center justify-center gap-2 transition"
+                  >
+                    <span>Open on Avalanche L1 Explorer</span>
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                ) : (
                   <a
                     href={`https://testnet.snowscan.xyz/tx/${receipt.transactionHash}`}
                     target="_blank"
@@ -382,8 +397,8 @@ export function TxReceiptModal({
                     <span>Open on Snowscan Explorer</span>
                     <ExternalLink className="h-3.5 w-3.5" />
                   </a>
-                </div>
-              )}
+                )}
+              </div>
 
               {/* Raw JSON-RPC Accordion */}
               <div className="pt-2 border-t border-white/10">

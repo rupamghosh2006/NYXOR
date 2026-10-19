@@ -4,6 +4,7 @@ import { AlertOctagon, ShieldCheck, ExternalLink, HelpCircle, Info } from "lucid
 import { useAccount } from "wagmi";
 import { formatUsdx, formatLeverage, formatPrice } from "../lib/format";
 import { CONTRACT_ADDRESSES } from "../config/contracts";
+import { getExplorerAddressUrl } from "../config/chains";
 
 interface MarketMetrics {
   vaultAssets: bigint | undefined;
@@ -72,11 +73,11 @@ export function ComparisonPanel({ standard, guarded, phase }: ComparisonPanelPro
             </div>
 
             <a
-              href={`https://testnet.snowscan.xyz/address/${CONTRACT_ADDRESSES.PerpMarketStandard}`}
+              href={getExplorerAddressUrl(CONTRACT_ADDRESSES.PerpMarketStandard, isL1 ? 98421 : 43113)}
               target="_blank"
               rel="noreferrer"
               className="text-slate-400 hover:text-slate-200 transition-colors"
-              title="View contract on Snowscan"
+              title={isL1 ? "View contract on Avalanche L1 Explorer" : "View contract on Snowscan"}
             >
               <ExternalLink className="h-4 w-4" />
             </a>
@@ -186,11 +187,11 @@ export function ComparisonPanel({ standard, guarded, phase }: ComparisonPanelPro
             </div>
 
             <a
-              href={`https://testnet.snowscan.xyz/address/${CONTRACT_ADDRESSES.PerpMarketGuarded}`}
+              href={getExplorerAddressUrl(CONTRACT_ADDRESSES.PerpMarketGuarded, isL1 ? 98421 : 43113)}
               target="_blank"
               rel="noreferrer"
               className="text-slate-400 hover:text-slate-200 transition-colors"
-              title="View contract on Snowscan"
+              title={isL1 ? "View contract on Avalanche L1 Explorer" : "View contract on Snowscan"}
             >
               <ExternalLink className="h-4 w-4" />
             </a>

@@ -184,17 +184,17 @@ export function Navbar() {
         )}
       </div>
 
-      <a
-        href={address ? `https://testnet.snowscan.xyz/address/${address}` : "#"}
-        target="_blank"
-        rel="noopener noreferrer"
+      <Link
+        href={isL1 ? "/compliance" : address ? `https://testnet.snowscan.xyz/address/${address}` : "#"}
+        target={isL1 ? undefined : "_blank"}
+        rel={isL1 ? undefined : "noopener noreferrer"}
         className="flex h-12 items-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-3 text-[11px] mono-numbers text-neutral-100 transition hover:border-white/30 hover:bg-white/[0.06]"
-        title="View address on Snowscan testnet explorer"
+        title={isL1 ? "Inspect Compliance & Allowlist Role on Nyxor L1" : "View address on Snowscan testnet explorer"}
       >
         <span className="signal-dot" />
         {shortenAddress(address)}
         <ArrowUpRight className="h-3 w-3 text-neutral-400" />
-      </a>
+      </Link>
       <button
         onClick={() => disconnect()}
         className="hidden h-12 rounded-xl border border-white/10 px-3 text-[11px] text-neutral-500 transition hover:border-white/25 hover:text-white sm:inline-flex sm:items-center"

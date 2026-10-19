@@ -255,11 +255,18 @@ export function AdminConsole({ isAdmin, onRefresh, addresses }: AdminConsoleProp
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-xs font-mono">
               <button
-                onClick={() => handleAdvance(600)}
+                onClick={() => jumpToTargetTimestamp(1792425600)} // Monday 16:00 UTC (OPEN)
                 disabled={isTxPending}
-                className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 text-slate-300 hover:text-white transition-all text-center"
+                className="p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-800 hover:border-emerald-500 text-emerald-300 hover:text-white transition-all text-center font-bold"
               >
-                +10 Minutes
+                Monday Open (20x)
+              </button>
+              <button
+                onClick={() => jumpToTargetTimestamp(1792420500)} // Monday 14:35 UTC (Cooldown)
+                disabled={isTxPending}
+                className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-blue-500/50 text-slate-300 hover:text-white transition-all text-center"
+              >
+                Monday Cooldown
               </button>
               <button
                 onClick={() => jumpToTargetTimestamp(1792182600)} // Friday 20:30 UTC
@@ -273,7 +280,7 @@ export function AdminConsole({ isAdmin, onRefresh, addresses }: AdminConsoleProp
                 disabled={isTxPending}
                 className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-amber-500/50 text-slate-300 hover:text-white transition-all text-center"
               >
-                Friday T-5m (Keeper Window)
+                Friday T-5m (Keeper)
               </button>
               <button
                 onClick={() => jumpToTargetTimestamp(1792238400)} // Saturday 12:00 UTC
@@ -283,18 +290,11 @@ export function AdminConsole({ isAdmin, onRefresh, addresses }: AdminConsoleProp
                 Weekend (Closed)
               </button>
               <button
-                onClick={() => jumpToTargetTimestamp(1792420500)} // Monday 14:35 UTC
+                onClick={() => handleAdvance(600)}
                 disabled={isTxPending}
-                className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-blue-500/50 text-slate-300 hover:text-white transition-all text-center"
+                className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 text-slate-300 hover:text-white transition-all text-center"
               >
-                Monday Reopen
-              </button>
-              <button
-                onClick={() => jumpToTargetTimestamp(Math.floor(Date.now() / 1000))}
-                disabled={isTxPending}
-                className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-600 text-slate-400 hover:text-slate-200 transition-all text-center"
-              >
-                Reset Clock
+                +10 Minutes
               </button>
             </div>
           </div>

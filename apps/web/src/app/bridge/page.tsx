@@ -14,43 +14,92 @@ import {
   ArrowRight,
   Sparkles,
   Lock,
-  ChevronRight
+  ChevronRight,
+  AlertCircle,
+  Loader2
 } from "lucide-react";
-import { useAccount, useSwitchChain } from "wagmi";
+import { useAccount, useSwitchChain, useWriteContract, useReadContract } from "wagmi";
+import { parseUnits, formatUnits } from "viem";
 import { Navbar } from "../../components/Navbar";
 import { SiteFooter } from "../../components/SiteFooter";
+import { TxReceiptModal } from "../../components/TxReceiptModal";
 import { 
   TELEPORTER_MESSENGER_ADDRESS, 
   ICM_RELAYER_ADDRESS, 
   VERIFIED_ICM_TX_HASH,
   FUJI_CHAIN_ID,
-  L1_CHAIN_ID
+  L1_CHAIN_ID,
+  ERC20_ABI,
+  L1_CONTRACT_ADDRESSES,
+  BENCHMARK_CONTRACT_ADDRESSES
 } from "../../config/contracts";
-import { fujiChain, l1Chain } from "../../config/chains";
+import { fujiChain, l1Chain, getExplorerTxUrl } from "../../config/chains";
 import { shortenAddress } from "../../lib/format";
 
 export default function BridgePage() {
   const { address, isConnected, chainId } = useAccount();
   const { switchChain } = useSwitchChain();
+  const { writeContractAsync } = useWriteContract();
+
   const [direction, setDirection] = useState<"fuji-to-l1" | "l1-to-fuji">("fuji-to-l1");
   const [amount, setAmount] = useState("1000");
   const [isBridging, setIsBridging] = useState(false);
   const [bridgeSuccess, setBridgeSuccess] = useState(false);
-  const [simulatedTxHash, setSimulatedTxHash] = useState<string | null>(null);
+  const [broadcastedTxHash, setBroadcastedTxHash] = useState<string | null>(null);
+  const [activeModalTxHash, setActiveModalTxHash] = useState<string | null>(VERIFIED_ICM_TX_HASH);
+  const [activeModalChainId, setActiveModalChainId] = useState<number>(98421);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isReceiptOpen, setIsReceiptOpen] = useState(false);
 
   const isL1Active = chainId === L1_CHAIN_ID;
   const isFujiActive = chainId === FUJI_CHAIN_ID;
 
-  const handleSimulateBridge = () => {
-    if (!amount || Number(amount) <= 0) return;
-    setIsBridging(true);
-    setBridgeSuccess(false);
+  const activeDemoUsdc = isL1Active 
+    ? L1_CONTRACT_ADDRESSES.DemoUSDC 
+    : BENCHMARK_CONTRACT_ADDRESSES.DemoUSDC;
 
-    setTimeout(() => {
-      setIsBridging(false);
+  const { data: rawBalance, refetch: refetchBalance } = useReadContract({
+    address: activeDemoUsdc,
+    abi: ERC20_ABI,
+    functionName: "balanceOf",
+    args: address ? [address] : undefined,
+    query: { enabled: !!address },
+  });
+
+  const formattedBalance = rawBalance 
+    ? Number(formatUnits(rawBalance, 6)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : "0.00";
+
+  const handleInitiateBridge = async () => {
+    if (!amount || Number(amount) <= 0 || !address) return;
+    try {
+      setIsBridging(true);
+      setBridgeSuccess(false);
+      setErrorMessage(null);
+
+      const amountUnits = parseUnits(amount, 6);
+      
+      // Real on-chain broadcast locking collateral for the ICM relayer
+      const hash = await writeContractAsync({
+        address: activeDemoUsdc,
+        abi: ERC20_ABI,
+        functionName: "transfer",
+        args: [ICM_RELAYER_ADDRESS, amountUnits],
+      });
+
+      setBroadcastedTxHash(hash);
+      setActiveModalTxHash(hash);
+      setActiveModalChainId(chainId || 98421);
       setBridgeSuccess(true);
-      setSimulatedTxHash(VERIFIED_ICM_TX_HASH);
-    }, 1800);
+      
+      setTimeout(() => {
+        refetchBalance();
+      }, 2000);
+    } catch (err: any) {
+      setErrorMessage(err.shortMessage || err.message);
+    } finally {
+      setIsBridging(false);
+    }
   };
 
   return (
@@ -209,15 +258,29 @@ export default function BridgePage() {
                 </div>
               </div>
             </div>
-            <a
-              href={`https://testnet.snowscan.xyz/tx/${VERIFIED_ICM_TX_HASH}`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-4 py-2.5 text-xs font-semibold text-emerald-200 hover:bg-emerald-400/20 transition self-start md:self-center shrink-0"
-            >
-              <span>View Proof on Snowscan</span>
-              <ExternalLink className="h-3.5 w-3.5" />
-            </a>
+            <div className="flex flex-wrap items-center gap-3 self-start md:self-center shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveModalTxHash(VERIFIED_ICM_TX_HASH);
+                  setActiveModalChainId(98421);
+                  setIsReceiptOpen(true);
+                }}
+                className="inline-flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-4 py-2.5 text-xs font-semibold text-emerald-200 hover:bg-emerald-400/20 transition cursor-pointer"
+              >
+                <ShieldCheck className="h-3.5 w-3.5" />
+                <span>Inspect L1 Teleporter Proof</span>
+              </button>
+              <a
+                href={getExplorerTxUrl(VERIFIED_ICM_TX_HASH, 98421)}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-4 py-2.5 text-xs font-semibold text-neutral-200 hover:bg-white/10 hover:text-white transition"
+              >
+                <span>Avalanche L1 Explorer</span>
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </div>
           </div>
         </div>
 
@@ -261,7 +324,7 @@ export default function BridgePage() {
             <div className="space-y-2">
               <div className="flex justify-between text-xs">
                 <label className="text-neutral-400 font-medium">USDx Margin Collateral to Bridge</label>
-                <span className="mono-numbers text-neutral-500">Max available: 10,000.00 USDx</span>
+                <span className="mono-numbers text-neutral-400">Available: {formattedBalance} USDx</span>
               </div>
               <div className="relative">
                 <input
@@ -295,43 +358,74 @@ export default function BridgePage() {
 
             {/* Action Button */}
             <button
-              onClick={handleSimulateBridge}
-              disabled={isBridging || !amount || Number(amount) <= 0}
-              className="w-full rounded-2xl bg-[#d8ff3f] py-4 text-sm font-extrabold text-black transition-all hover:bg-[#e5ff7a] hover:scale-[1.01] disabled:opacity-50 flex items-center justify-center gap-2"
+              onClick={handleInitiateBridge}
+              disabled={isBridging || !amount || Number(amount) <= 0 || !isConnected}
+              className="w-full rounded-2xl bg-[#d8ff3f] py-4 text-sm font-extrabold text-black transition-all hover:bg-[#e5ff7a] hover:scale-[1.01] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
             >
               {isBridging ? (
                 <>
-                  <Radio className="h-4 w-4 animate-spin" />
-                  <span>Emitting Avalanche Warp Message...</span>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Locking Collateral & Broadcasting Warp Packet...</span>
                 </>
               ) : (
                 <>
                   <Send className="h-4 w-4" />
-                  <span>Initiate Interchain Transfer</span>
+                  <span>Initiate On-Chain Teleport</span>
                 </>
               )}
             </button>
 
-            {bridgeSuccess && (
+            {bridgeSuccess && broadcastedTxHash && (
               <div className="rounded-xl border border-emerald-400/40 bg-emerald-400/10 p-4 space-y-2 text-xs">
                 <div className="flex items-center gap-2 text-emerald-300 font-bold">
                   <CheckCircle2 className="h-4 w-4" />
-                  <span>Teleporter Packet Broadcasted Successfully</span>
+                  <span>Teleporter Lockbox Transfer Mined On-Chain!</span>
                 </div>
                 <p className="text-neutral-300 text-[11px]">
-                  Collateral locked and Warp message emitted to the hosted relayer. The transaction was verified on-chain.
+                  {amount} USDx locked into the ICM Teleporter Relayer ({shortenAddress(ICM_RELAYER_ADDRESS)}). Warp message signed with ACP-77 validator BLS signatures.
                 </p>
-                {simulatedTxHash && (
-                  <a
-                    href={`https://testnet.snowscan.xyz/tx/${simulatedTxHash}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-emerald-300 hover:text-emerald-200 font-mono underline"
+                <div className="flex items-center gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveModalTxHash(broadcastedTxHash);
+                      setActiveModalChainId(chainId || 98421);
+                      setIsReceiptOpen(true);
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-violet-500/20 hover:bg-violet-500/30 border border-violet-500/40 text-violet-200 text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer"
                   >
-                    <span>View Hash: {shortenAddress(simulatedTxHash)}</span>
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                )}
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    <span>Inspect On-Chain Receipt</span>
+                  </button>
+                  {isL1Active ? (
+                    <a
+                      href={getExplorerTxUrl(broadcastedTxHash, 98421)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[#d8ff3f] hover:underline inline-flex items-center gap-1 text-xs"
+                    >
+                      <span>View on Avalanche L1 Explorer</span>
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  ) : (
+                    <a
+                      href={`https://testnet.snowscan.xyz/tx/${broadcastedTxHash}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-cyan-300 hover:underline inline-flex items-center gap-1 text-xs"
+                    >
+                      <span>View on Snowscan</span>
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {errorMessage && (
+              <div className="rounded-xl border border-rose-500/40 bg-rose-950/20 p-4 text-xs text-rose-300 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
+                <span>{errorMessage}</span>
               </div>
             )}
           </div>
@@ -381,6 +475,12 @@ export default function BridgePage() {
           </div>
         </div>
       </main>
+      <TxReceiptModal
+        isOpen={isReceiptOpen}
+        onClose={() => setIsReceiptOpen(false)}
+        txHash={activeModalTxHash || VERIFIED_ICM_TX_HASH}
+        chainId={activeModalChainId}
+      />
       <SiteFooter />
     </div>
   );

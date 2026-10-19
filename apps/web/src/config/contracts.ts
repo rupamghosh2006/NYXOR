@@ -59,7 +59,7 @@ export const TX_ALLOW_LIST_ADDRESS = "0x0200000000000000000000000000000000000002
 /** Interchain Messaging & Relayer Constants */
 export const TELEPORTER_MESSENGER_ADDRESS = "0x253b2784c75e610dD0FF1da844684a1aC0aa5fcf" as const;
 export const ICM_RELAYER_ADDRESS = "0x40e8484138998f777Be39DB3Baa8Ba425D5a882F" as const;
-export const VERIFIED_ICM_TX_HASH = "0x65ed8b74f1bb021fef5c509b996a161fbd382039196b78fb551b8c6c78853095" as const;
+export const VERIFIED_ICM_TX_HASH = "0x7b1581184594132edff78faa1700b4b5fdbac49d3948f7d074937abe410de4f4" as const;
 
 export const TX_ALLOW_LIST_ABI = [
   {
@@ -394,6 +394,16 @@ export const ERC20_ABI = [
     name: "approve",
     inputs: [
       { name: "spender", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "transfer",
+    inputs: [
+      { name: "to", type: "address" },
       { name: "amount", type: "uint256" },
     ],
     outputs: [{ name: "", type: "bool" }],

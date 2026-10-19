@@ -7,8 +7,8 @@ import {
   DEPLOYMENT_METADATA,
   LIQUIDITY_VAULT_ABI,
   PERP_MARKET_ABI,
-  EXPLORER_BASE,
 } from "../config/contracts";
+import { FUJI_EXPLORER } from "../config/chains";
 import { formatUsdx } from "../lib/format";
 import fujiScenario from "../deployments/fuji-scenario.json";
 
@@ -123,7 +123,7 @@ export function RecordedRun() {
                   Standard Vault (Naive 24/7)
                 </div>
                 <a
-                  href={`${EXPLORER_BASE}/address/${BENCHMARK_CONTRACT_ADDRESSES.LiquidityVaultStandard}`}
+                  href={`${FUJI_EXPLORER}/address/${BENCHMARK_CONTRACT_ADDRESSES.LiquidityVaultStandard}`}
                   target="_blank"
                   rel="noreferrer"
                   className="text-slate-400 hover:text-slate-200 text-[11px] font-mono flex items-center gap-1"
@@ -174,7 +174,7 @@ export function RecordedRun() {
                   Guarded Vault (Nyxor Engine)
                 </div>
                 <a
-                  href={`${EXPLORER_BASE}/address/${BENCHMARK_CONTRACT_ADDRESSES.LiquidityVaultGuarded}`}
+                  href={`${FUJI_EXPLORER}/address/${BENCHMARK_CONTRACT_ADDRESSES.LiquidityVaultGuarded}`}
                   target="_blank"
                   rel="noreferrer"
                   className="text-slate-400 hover:text-slate-200 text-[11px] font-mono flex items-center gap-1"
@@ -236,7 +236,7 @@ export function RecordedRun() {
                     >
                       <span className="text-slate-300">{tx.description}</span>
                       <a
-                        href={`${EXPLORER_BASE}/tx/${tx.hash}`}
+                        href={`${FUJI_EXPLORER}/tx/${tx.hash}`}
                         target="_blank"
                         rel="noreferrer"
                         className="text-cyan-400 hover:text-cyan-300 flex items-center gap-1 shrink-0"

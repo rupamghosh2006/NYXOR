@@ -24,11 +24,11 @@ Nyxor L1 is a sovereign, permissioned **Subnet-EVM Layer 1 blockchain** deployed
 | **EVM Chain ID** | `98421` | Ethereum-compatible chain identifier |
 | **Native Token Symbol** | `NYX` | Native gas currency |
 | **Genesis Allocation** | `1,000,000.0000 NYX` | Allocated to deployer at Block 0 |
-| **Subnet ID** | `25ZDnC6Ji6JZxbPstyFiczGMJttvBUuH7KK1F2wFqLPUYQ5vo5` | P-Chain Subnet identifier |
-| **Blockchain ID** | `2SrgwcLrpgt2kLrqhTr6fMaPFd1kN467ai3eaK4HcFyBq1YbaY` | P-Chain Blockchain identifier |
+| **Subnet ID** | `2rXbQTjPnXKnRpogaLshYEmYfnLFahCgJ5gfuJ4dciHvJb6A9j` | P-Chain Subnet identifier |
+| **Blockchain ID** | `2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS` | P-Chain Blockchain identifier |
 | **VM ID** | `srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy` | Subnet-EVM Virtual Machine ID |
-| **RPC URL** | `https://nodes-prod.43.207.73.245.sslip.io/ext/bc/2SrgwcLrpgt2kLrqhTr6fMaPFd1kN467ai3eaK4HcFyBq1YbaY/rpc` | Hosted HTTPS RPC endpoint |
-| **Block Explorer** | [Avalanche Subnet Explorer](https://explorer-test.avax.network/) | Official explorer index |
+| **RPC URL** | `https://nodes-prod.43.207.73.245.sslip.io/ext/bc/2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS/rpc` | Hosted HTTPS RPC endpoint |
+| **Block Explorer** | [Firn Explorer](https://2rbfkegm.firn.gg) | Real-time block explorer |
 
 ---
 
@@ -36,10 +36,11 @@ Nyxor L1 is a sovereign, permissioned **Subnet-EVM Layer 1 blockchain** deployed
 
 Nyxor L1 operates on Proof of Authority (PoA) consensus managed by on-chain validator management contracts deployed directly on the L1:
 
-* **Validator Node ID:** `NodeID-4sodDoXrW97ghLGGfDQKg1HmkjrqXhqVH`
-* **Node Host:** `nodes-prod.43.207.73.245.sslip.io`
+* **Validator Node ID:** `NodeID-EKvv1jhJTCzBmKjm8P3jRvQ1cB3sTKDg2`
+* **BLS Public Key:** `0xb4c868c46b46e0fdd2c6566c27e8dc619841ccbe068b3e2154c7d29efe79495cad3234d3cb74c1b700cc53bde09155a2`
+* **Validation ID (ACP-77):** `6GXB4EYaJk7akgrkKvaiTUQyk6zCXF2vNgHGyHPxcLR5e85ur`
 * **Validator Weight:** `100` (Consensus weight)
-* **Lifecycle:** Managed cloud node provisioned via Avalanche Builder Console (Active until October 16, 2026).
+* **P-Chain Staked Balance:** `0.1 AVAX` (`100,000,000 nAVAX`)
 * **P-Chain Owner Address:** `P-fuji1crw3r2f3k78daauw8ndgtvk8hzmk92azwgqgjv`
 * **Deactivation Owner Address:** `P-fuji1crw3r2f3k78daauw8ndgtvk8hzmk92azwgqgjv`
 
@@ -71,38 +72,40 @@ Nyxor L1 operates on Proof of Authority (PoA) consensus managed by on-chain vali
 ### D. Deployed Nyxor Protocol Suite (On Nyxor L1)
 | Contract | Address | Description |
 |---|---|---|
-| **`DemoUSDC`** | `0x400D575b8BE7a395fBF4BC8161A4A454605730C7` | L1 test margin asset (`USDx`) |
-| **`MarketClock`** | `0x9702513f37EC899e21126A80F2AC94bBA9839084` | L1 simulated market time engine |
-| **`MarketSchedule`** | `0x0118DF8b09e771ba81EbB8EFE40dB54c0c64355D` | Weekend equity market schedule |
-| **`MockPriceFeedStandard`** | `0xB327745d1E019AB373C4901C5cae0334411093b8` | Unmanaged oracle price feed |
-| **`MockPriceFeedGuarded`** | `0xf0Bae412d7915D4Dd961303aA99e528233d22d8a` | Pre-close check-pointing price feed |
-| **`FlatRiskPolicy`** | `0x3C25146E0ebd05C521c3216d530d4A63455769f9` | 20x unmanaged flat risk policy |
-| **`MarketHoursRiskPolicy`** | `0x7552437ac5b5A7f4B464F70FA3df880F13D05fe8` | Dynamic market-hours risk policy |
-| **`LiquidityVaultStandard`** | `0x459B6F740FBAcED4A8955FD7f724DaB77aCbC798` | Standard LP vault (seeded with 500k USDx) |
-| **`LiquidityVaultGuarded`** | `0x5c844Fd4681DB6E8648a382d17cedB3E0e441218` | Guarded LP vault (seeded with 500k USDx) |
-| **`PerpMarketStandard`** | `0x180bb88cc7F1Fb69Ae6E3A02fFeC82481322995a` | Standard perpetual futures market |
-| **`PerpMarketGuarded`** | `0xaE9FbdE08Aa7F4f03C409319eA78749ed0390749` | Guarded perpetual futures market |
+| **`DemoUSDC`** | `0x802508DB190b1826c6fC4238B5172F344ba96811` | L1 test margin asset (`USDx`) |
+| **`MarketClock`** | `0x0269Fa1782f5Ed743486091900aa24eF1C8dCadA` | L1 simulated market time engine |
+| **`MarketSchedule`** | `0x3f5560b462Dc91339FAAeaCde7A0E98D26a20aAb` | Weekend equity market schedule |
+| **`MockPriceFeedStandard`** | `0x7F7b80959F30A06D3f066b8b63B065B02aD1A4D7` | Unmanaged oracle price feed |
+| **`MockPriceFeedGuarded`** | `0x66ac4aB263B69BE7003089BE185A202a9E981fCa` | Pre-close check-pointing price feed |
+| **`FlatRiskPolicy`** | `0x4341D3A566AC6e0e51076B9fEf68EFE3ca5E047F` | 20x unmanaged flat risk policy |
+| **`MarketHoursRiskPolicy`** | `0x820BE01587cfd1F9c6d46cB363f09D5c9Dcae974` | Dynamic market-hours risk policy |
+| **`LiquidityVaultStandard`** | `0x4c38297282959b86482b10d59210c3f2df84B659` | Standard LP vault (seeded with 500k USDx) |
+| **`LiquidityVaultGuarded`** | `0x648b16f94C1ff3776368d8Bc067b5F8881ce6Cfd` | Guarded LP vault (seeded with 500k USDx) |
+| **`PerpMarketStandard`** | `0x2268c8cB67e1cd78Ca4Ab254894BB5F5D1E23Fab` | Standard perpetual futures market |
+| **`PerpMarketGuarded`** | `0x400D575b8BE7a395fBF4BC8161A4A454605730C7` | Guarded perpetual futures market |
 
 ---
 
 ## 5. Verified Transaction Hashes & On-Chain Proofs
 
 ### P-Chain Lifecycle Transactions
-1. **Blockchain Creation (`CreateChainTx`):**
-   * **Tx ID:** `2SrgwcLrpgt2kLrqhTr6fMaPFd1kN467ai3eaK4HcFyBq1YbaY`
-   * *Creates the blockchain state on Fuji P-Chain with the custom genesis parameters.*
-2. **Subnet to L1 Conversion (`ConvertSubnetToL1Tx`):**
-   * **Tx ID:** `2S6jeTQjgP6gdnWuNWsA3ZAKcXrgkQi86MxX16Qpq7KThBaitH`
-   * *Converts the Subnet into a sovereign L1 and stakes validator balance under ACP-77.*
+1. **Subnet Creation (`CreateSubnetTx`):**
+   * **Tx ID:** [`2rXbQTjPnXKnRpogaLshYEmYfnLFahCgJ5gfuJ4dciHvJb6A9j`](https://build.avax.network/explorer/fuji/p-chain/tx/2rXbQTjPnXKnRpogaLshYEmYfnLFahCgJ5gfuJ4dciHvJb6A9j)
+2. **Blockchain Creation (`CreateChainTx`):**
+   * **Tx ID:** [`2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS`](https://build.avax.network/explorer/fuji/p-chain/tx/2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS)
+   * *Creates the blockchain state on Fuji P-Chain with custom Subnet-EVM genesis parameters.*
+3. **Subnet to L1 Conversion (`ConvertSubnetToL1Tx`):**
+   * **Tx ID:** [`bdyG8ymzvi2RpiHcJiQvD1ugKSht8VrFXVPjLZzvNxAp3cHhx`](https://build.avax.network/explorer/fuji/p-chain/tx/bdyG8ymzvi2RpiHcJiQvD1ugKSht8VrFXVPjLZzvNxAp3cHhx)
+   * *Converts the Subnet into a sovereign ACP-77 L1, stakes 0.1 AVAX, and binds the Validator Manager.*
 
 ### Verified Cross-Chain Teleporter Message
 * **Source Chain:** Nyxor L1 (`Chain ID: 98421`)
 * **Destination Chain:** Avalanche Fuji C-Chain (`Chain ID: 43113`)
-* **Source Contract (Nyxor L1):** `0x05c474824e7d2cc67cf22b456f7cf60c0e3a1289`
-* **Destination Contract (Fuji C-Chain):** `0xd8b6b037b75b6605c34bf6b7f4dd0e93f40f1af7`
-* **Payload Number:** `4820`
-* **Transaction Hash (Broadcast on Nyxor L1):**  
-  [`0x65ed8b74f1bb021fef5c509b996a161fbd382039196b78fb551b8c6c78853095`](https://testnet.snowscan.xyz/tx/0x65ed8b74f1bb021fef5c509b996a161fbd382039196b78fb551b8c6c78853095)
+* **Margin Token (USDx):** `0x802508DB190b1826c6fC4238B5172F344ba96811`
+* **Relayer Lockbox Address:** `0x40e8484138998f777Be39DB3Baa8Ba425D5a882F`
+* **Payload / Collateral Amount:** `1,000.00 USDx`
+* **Transaction Hash (Mined on Nyxor L1 Block 20):**  
+  [`0x7b1581184594132edff78faa1700b4b5fdbac49d3948f7d074937abe410de4f4`](https://build.avax.network/explorer/mainnet/2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS/tx/0x7b1581184594132edff78faa1700b4b5fdbac49d3948f7d074937abe410de4f4)
 
 ---
 
