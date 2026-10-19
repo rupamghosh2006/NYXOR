@@ -29,6 +29,23 @@
 
 ---
 
+## Quick Navigation
+
+- [1. What Nyxor Is (and What It Is Not)](#1-what-nyxor-is-and-what-it-is-not)
+- [2. The Problem: The Scoreboard Dilemma](#2-the-problem-the-scoreboard-dilemma)
+- [3. The Nyxor Solution: Phase-Aware Risk Engine](#3-the-nyxor-solution-phase-aware-risk-engine)
+- [4. Architecture](#4-architecture)
+- [5. Verified Avalanche Fuji Deployments (Chain ID: 43113)](#5-verified-avalanche-fuji-deployments-chain-id-43113)
+  - [5.1 Sovereign Avalanche L1 & Interchain Messaging](#51-sovereign-avalanche-l1--interchain-messaging-chain-id-98421)
+- [6. What Is Simulated vs. What Is Real](#6-what-is-simulated-vs-what-is-real)
+- [7. Deterministic Weekend-Gap Scenario Results](#7-deterministic-weekend-gap-scenario-results)
+- [8. Limitations & Honest Engineering Trade-offs](#8-limitations--honest-engineering-trade-offs)
+- [9. How to Run & Verify](#9-how-to-run--verify)
+- [10. AI Tools Disclosure](#10-ai-tools-disclosure)
+- [11. Test Count](#11-test-count)
+
+---
+
 ## 1. What Nyxor Is (and What It Is Not)
 
 - **What it IS:** A modular, schedule-aware risk parameter engine and isolated-margin perpetual risk layer. It automatically adjusts leverage limits, maintenance margin thresholds, open interest caps, and funding rates based on real-world reference market sessions. It incorporates automated pre-close deleveraging at fair open-market prices to protect liquidity providers against weekend gap shocks.
