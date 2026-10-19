@@ -1,0 +1,56 @@
+---
+title: "Introduction"
+description: "The market closes on Friday. Your risk shouldn't."
+---
+
+# Nyxor Protocol
+
+Nyxor is an open-source, market-hours-aware **risk layer** engineered specifically for institutional Real-World Asset (RWA) perpetual futures on Avalanche.
+
+<CardGroup cols={2}>
+  <Card title="Live Web Terminal" icon="browser" href="https://nyxor-protocol.vercel.app">
+    Interactive trading terminal, cross-chain bridge, and compliance precompile inspector.
+  </Card>
+  <Card title="Sovereign L1 Explorer" icon="cubes" href="https://build.avax.network/explorer/mainnet/2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS">
+    Live Avalanche Builder Hub Glacier Explorer for Nyxor L1 (Chain ID: 98421).
+  </Card>
+</CardGroup>
+
+---
+
+## 1. What Nyxor Is (and What It Is Not)
+
+* **What it IS:** A modular, schedule-aware risk parameter engine and isolated-margin perpetual risk layer. It automatically adjusts leverage limits, maintenance margin thresholds, open interest caps, and funding rates based on real-world reference market sessions. It incorporates automated pre-close deleveraging at fair open-market prices to protect liquidity providers against weekend gap shocks.
+* **What it IS NOT:** Nyxor is **not an exchange**, not an order book, not an AMM, and not a token project. It is infrastructure designed to be integrated into derivative protocols offering stock, index, and commodity synthetics.
+
+---
+
+## 2. The Scoreboard Dilemma
+
+Synthetic RWA perpetuals (stocks, equity indices, gold, commodities) trade 24/7 on crypto rails, but the real-world markets they track close for nights, weekends, and holidays.
+
+Trading a stock perp over the weekend is like betting on a game while the stadium scoreboard is turned off. Nobody knows the real score until Monday morning. When the traditional exchange reopens, news accumulated over the weekend can cause the spot price to **gap** violently over liquidation levels:
+
+1. **Liquidations require continuous price paths:** Traditional on-chain liquidation engines assume liquidators can catch underwater positions as prices cross maintenance thresholds.
+2. **Weekend gaps jump over thresholds:** A sudden −8% or −20% Monday open gaps directly past collateral.
+3. **Losses exceed margin:** Trader equity drops deep into the negative. The resulting **bad debt** is absorbed directly by liquidity providers or the protocol vault.
+
+---
+
+## 3. The Nyxor Solution: Phase-Aware Risk Engine
+
+Nyxor eliminates gap-induced insolvencies by dynamically transitioning between four distinct operating phases:
+
+```mermaid
+flowchart LR
+    A["Monday 14:30 UTC<br/><b>OPEN Phase</b><br/>20x Normal Trading"] --> B["Friday 20:00 UTC<br/><b>PRE_CLOSE Phase</b><br/>Linear 20x → 5x Ramp"]
+    B --> C["Friday 20:50 UTC<br/><b>Keeper Deleveraging</b><br/>Cut Over-Cap Positions"]
+    C --> D["Friday 21:00 UTC<br/><b>CLOSED Phase</b><br/>5x Cap, Reduce-Only"]
+    D --> E["Monday 14:30 UTC<br/><b>REOPEN_COOLDOWN</b><br/>Shock Settled Against Vault"]
+    E --> A
+```
+
+1. **Pre-Close Linear Ramp (`PRE_CLOSE`):** Leverage caps linearly tighten from 20x down to 5x over the final 60 minutes before close. Open interest caps contract from 100% to 40%.
+2. **Keeper Pre-Close Deleveraging:** During the final 10-minute window before market close, keeper bots systematically cut any over-cap position to the 5x closed-market cap at the **active, fair Friday market price**—eliminating excessive leverage *before* the scoreboard goes dark.
+3. **Defensive Closed Regime (`CLOSED`):** Over the weekend, markets operate in `reduce-only` mode with higher maintenance margins (6.00%) and doubled funding rates.
+4. **Controlled Reopening (`REOPEN_COOLDOWN`):** A 15-minute post-open cooldown registers the first verified opening print, processes liquidations against the opening price, and absorbs shortfalls before restoring standard 20x limits.

@@ -1,68 +1,80 @@
 {
-  "$schema": "https://mintlify.com/schema.json",
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
   "name": "Nyxor Protocol",
-  "logo": {
-    "dark": "/logo.png",
-    "light": "/logo.png"
-  },
-  "favicon": "/favicon.ico",
   "colors": {
     "primary": "#d8ff3f",
     "light": "#e5ff7a",
-    "dark": "#0a0a0a",
-    "anchors": {
-      "from": "#d8ff3f",
-      "to": "#a78bfa"
+    "dark": "#0a0a0a"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Live App",
+        "href": "https://nyxor-protocol.vercel.app"
+      },
+      {
+        "label": "Avalanche L1 Explorer",
+        "href": "https://build.avax.network/explorer/mainnet/2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Launch App",
+      "href": "https://nyxor-protocol.vercel.app"
     }
   },
-  "topbarLinks": [
-    {
-      "name": "Live Application",
-      "url": "https://nyxor-protocol.vercel.app"
-    },
-    {
-      "name": "Avalanche L1 Explorer",
-      "url": "https://build.avax.network/explorer/mainnet/2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS"
+  "footer": {
+    "socials": {
+      "github": "https://github.com/rupamghosh2006/NYXOR"
     }
-  ],
-  "topbarCtaButton": {
-    "name": "GitHub Repository",
-    "url": "https://github.com/rupamghosh2006/NYXOR"
   },
-  "navigation": [
-    {
-      "group": "Getting Started",
-      "pages": [
-        "introduction",
-        "quickstart"
-      ]
-    },
-    {
-      "group": "Core Architecture",
-      "pages": [
-        "architecture/overview",
-        "architecture/dual-anchor",
-        "architecture/risk-engine",
-        "architecture/txallowlist-precompile",
-        "architecture/teleporter-icm"
-      ]
-    },
-    {
-      "group": "Solvency & Evidence",
-      "pages": [
-        "evidence/solvency-benchmark",
-        "evidence/weekend-gap-scenario"
-      ]
-    },
-    {
-      "group": "Deployments & Specs",
-      "pages": [
-        "deployments/nyxor-l1",
-        "deployments/contracts"
-      ]
-    }
-  ],
-  "footerSocials": {
-    "github": "https://github.com/rupamghosh2006/NYXOR"
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "mcp",
+      "cursor",
+      "vscode"
+    ],
+    "display": "header"
+  },
+  "navigation": {
+    "pages": [
+      {
+        "group": "Getting Started",
+        "pages": [
+          "index",
+          "quickstart"
+        ]
+      },
+      {
+        "group": "Core Architecture",
+        "pages": [
+          "architecture/overview",
+          "architecture/dual-anchor",
+          "architecture/risk-engine",
+          "architecture/txallowlist-precompile",
+          "architecture/teleporter-icm"
+        ]
+      },
+      {
+        "group": "Solvency & Evidence",
+        "pages": [
+          "evidence/solvency-benchmark",
+          "evidence/weekend-gap-scenario"
+        ]
+      },
+      {
+        "group": "Deployments & Specs",
+        "pages": [
+          "deployments/nyxor-l1",
+          "deployments/contracts"
+        ]
+      }
+    ]
   }
 }
