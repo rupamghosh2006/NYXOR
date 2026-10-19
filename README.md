@@ -15,6 +15,7 @@
   [![Solidity](https://img.shields.io/badge/Solidity-0.8.24-363636?style=flat-square&logo=solidity&logoColor=white)](contracts/)
   [![Foundry Tests](https://img.shields.io/badge/Foundry-103%20Passed-16A34A?style=flat-square&logo=ethereum&logoColor=white)](#9-how-to-run--verify)
   [![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
+  [![X](https://img.shields.io/badge/X-@nyxorprotocol-black?style=flat-square&logo=x&logoColor=white)](https://x.com/nyxorprotocol)
 
   <br />
 </div>
@@ -23,7 +24,8 @@
 
 > **Live Demo Application:** [https://nyxor-protocol.vercel.app](https://nyxor-protocol.vercel.app)  
 > **Official Documentation:** [https://ruponchain.mintlify.site](https://ruponchain.mintlify.site)  
-> **Sovereign Nyxor L1 Explorer:** [Avalanche Builder Hub Glacier Explorer](https://build.avax.network/explorer/mainnet/2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS/block/1)
+> **Sovereign Nyxor L1 Explorer:** [Avalanche Builder Hub Glacier Explorer](https://build.avax.network/explorer/mainnet/2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS/block/1)  
+> **Official X / Twitter:** [https://x.com/nyxorprotocol](https://x.com/nyxorprotocol)
 
 ---
 
