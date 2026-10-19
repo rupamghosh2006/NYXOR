@@ -234,13 +234,16 @@ export function Navbar() {
         </nav>
 
         <div className="flex shrink-0 items-center gap-4">
-          <Link
-            href="/evidence"
-            className="hidden text-[15px] font-medium text-neutral-300 transition-colors hover:text-white xl:block"
+          <a
+            href="https://ruponchain.mintlify.site/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden items-center gap-1.5 text-[15px] font-medium text-neutral-300 transition-colors hover:text-white xl:inline-flex"
             onClick={() => setExploreOpen(false)}
           >
             Documentation
-          </Link>
+            <ArrowUpRight className="h-3.5 w-3.5 text-neutral-400" />
+          </a>
           <div className="hidden sm:block">{walletControl}</div>
           <button
             type="button"
@@ -291,6 +294,16 @@ export function Navbar() {
                 {label}
               </Link>
             ))}
+            <a
+              href="https://ruponchain.mintlify.site/"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={closeMenus}
+              className="col-span-2 flex items-center justify-center gap-2 rounded-xl border border-[#d8ff3f]/30 bg-[#d8ff3f]/10 px-3 py-3 font-semibold text-[#d8ff3f] transition hover:bg-[#d8ff3f]/20"
+            >
+              Documentation
+              <ArrowUpRight className="h-4 w-4" />
+            </a>
           </div>
           <div className="mx-auto mt-3 max-w-7xl sm:hidden">{walletControl}</div>
         </nav>

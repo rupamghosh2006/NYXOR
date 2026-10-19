@@ -45,6 +45,10 @@ export function SiteFooter() {
         <div>
           <p className="eyebrow text-white">Explore</p>
           <div className="mt-3 flex flex-col gap-2.5 mono-numbers text-[11px]">
+            <a href="https://ruponchain.mintlify.site/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 transition-colors hover:text-[#d8ff3f]">
+              <span>Documentation</span>
+              <ArrowUpRight className="h-3 w-3" />
+            </a>
             <Link href="/protocol" className="transition-colors hover:text-[#d8ff3f]">Protocol</Link>
             <Link href="/risk" className="transition-colors hover:text-[#d8ff3f]">Risk engine</Link>
             <Link href="/evidence" className="transition-colors hover:text-[#d8ff3f]">On-chain evidence</Link>
