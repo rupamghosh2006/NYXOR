@@ -1,11 +1,29 @@
-# Nyxor Protocol
+<div align="center">
+  <img src="docs/logo.png" alt="Nyxor Protocol Logo" width="100" />
 
-> **The market closes on Friday. Your risk shouldn't.**  
-> An open-source, market-hours-aware **risk layer** for Real-World Asset (RWA) perpetual futures on Avalanche.
->
-> 🌐 **Live Demo Application:** [https://nyxor-protocol.vercel.app](https://nyxor-protocol.vercel.app)  
-> 📚 **Official Documentation:** [https://ruponchain.mintlify.site](https://ruponchain.mintlify.site)  
-> ⚡ **Sovereign Nyxor L1 Explorer:** [Avalanche Builder Hub Glacier Explorer](https://build.avax.network/explorer/mainnet/2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS/block/1)
+  # Nyxor Protocol
+
+  **The market closes on Friday. Your risk shouldn't.**  
+  An open-source, market-hours-aware risk layer for Real-World Asset (RWA) perpetual futures on Avalanche.
+
+  <br />
+
+  [![Live App](https://img.shields.io/badge/Live%20App-nyxor--protocol.vercel.app-black?style=flat-square&logo=vercel&logoColor=white)](https://nyxor-protocol.vercel.app)
+  [![Documentation](https://img.shields.io/badge/Docs-Mintlify-07C983?style=flat-square&logo=mintlify&logoColor=white)](https://ruponchain.mintlify.site)
+  [![Avalanche L1](https://img.shields.io/badge/Avalanche%20L1-Chain%2098421-8B5CF6?style=flat-square&logo=avalanche&logoColor=white)](https://build.avax.network/explorer/mainnet/2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS/block/1)
+  [![Fuji C-Chain](https://img.shields.io/badge/Fuji%20C--Chain-Chain%2043113-E84142?style=flat-square&logo=avalanche&logoColor=white)](https://testnet.snowscan.xyz)
+  [![Solidity](https://img.shields.io/badge/Solidity-0.8.24-363636?style=flat-square&logo=solidity&logoColor=white)](contracts/)
+  [![Foundry Tests](https://img.shields.io/badge/Foundry-103%20Passed-16A34A?style=flat-square&logo=ethereum&logoColor=white)](#9-how-to-run--verify)
+  [![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
+
+  <br />
+</div>
+
+---
+
+> **Live Demo Application:** [https://nyxor-protocol.vercel.app](https://nyxor-protocol.vercel.app)  
+> **Official Documentation:** [https://ruponchain.mintlify.site](https://ruponchain.mintlify.site)  
+> **Sovereign Nyxor L1 Explorer:** [Avalanche Builder Hub Glacier Explorer](https://build.avax.network/explorer/mainnet/2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS/block/1)
 
 ---
 
