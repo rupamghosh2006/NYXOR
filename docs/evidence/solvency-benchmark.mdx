@@ -1,0 +1,40 @@
+---
+title: "Solvency Benchmark"
+description: "Empirical proof of LP vault insolvency prevention under a deterministic -8% weekend gap."
+---
+
+## The Solvency Differential
+
+In an institutional RWA perp market, liquidity providers underwrite trader profits and absorb liquidations. When a reference market gaps over the weekend, the solvency of the liquidity vault is put to the test:
+
+| Metric | Standard Vault (Naive 24/7) | Guarded Vault (Nyxor Engine) | Impact |
+|---|---|---|---|
+| **Friday Max Leverage** | 20.00x (Static) | 5.00x (Automated Ramp) | Risk scaled down before close |
+| **Pre-Close Deleveraging** | None (100% exposed) | Automated at T-7.5m | Excess leverage cut at $4,150 |
+| **Monday Open Price** | $3,818.00 (-8.00%) | $3,818.00 (-8.00%) | Identical opening gap shock |
+| **Trader Negative Equity** | -$7,487.26 USDx | $0.00 USDx | Margin absorbed gap cleanly |
+| **Vault Bad Debt Accumulation** | **$7,487.26 USDx** | **$0.00 USDx** | **100% Solvency Preserved** |
+| **LP Haircut Applied** | **YES (Insolvent)** | **NO (Healthy)** | LPs fully protected |
+
+---
+
+## Accounting Breakdown (Naive Vault Insolvency)
+
+When Trader 1 held a 20x Long position ($50,000 notional) across the −8.00% gap on the Naive market:
+
+```text
+Position Size:              50,000.00 USDx (20x leverage)
+Initial Trader Margin:       2,500.00 USDx
+Price Decline (-8.00%):     -4,000.00 USDx
+Accrued Weekend Funding:    -1,487.26 USDx
+Total Losses:               -5,487.26 USDx
+
+Trader Equity at Reopen:     2,500.00 - 5,487.26 = -2,987.26 USDx
+Liquidator Execution Bounty: 1,000.00 USDx
+Shortfall to Absorb:        -3,987.26 USDx
+
+Insurance Fund Depleted:    -$40.80 USDx (100% depleted)
+Net Vault Bad Debt:         $7,487.26 USDx (Dumped onto Liquidity Providers)
+```
+
+In contrast, on the **Nyxor Guarded Market**, Trader 1's position was trimmed down to 5x ($12,500 notional) at 20:52:30 UTC at the fair Friday price ($4,150.00). At Monday's −8.00% reopen, the trader's equity remained positive, requiring zero vault subsidization!

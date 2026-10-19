@@ -1,0 +1,43 @@
+---
+title: "Market-Hours Risk Engine"
+description: "Dynamic mathematical parameters, phase transitions, and pre-close deleveraging."
+---
+
+## Phase State Machine
+
+The market schedule decomposes any Unix timestamp into one of four operational phases:
+
+| Phase | Time Window | Max Leverage | Mode | Funding Rate |
+|---|---|---|---|---|
+| **`OPEN`** | Mon–Fri 14:30 – 20:00 UTC | **20.00x** | Normal Trading | 1.00x Standard |
+| **`PRE_CLOSE`** | Mon–Fri 20:00 – 21:00 UTC | **Linear 20x $\to$ 5x** | Deleveraging Warning | 1.00x Standard |
+| **`CLOSED`** | Fri 21:00 – Mon 14:30 UTC | **5.00x** | Reduce-Only | 2.00x Defensive |
+| **`REOPEN_COOLDOWN`** | Mon 14:30 – 14:45 UTC | **Linear 5x $\to$ 20x** | Liquidations Active | 1.00x Standard |
+
+---
+
+## 1. Linear Deleveraging Ramp (`PRE_CLOSE`)
+
+During the 3,600 seconds leading up to Friday 21:00 UTC, the maximum allowable leverage $L_{\max}(t)$ tightens linearly:
+
+$$L_{\max}(t) = L_{\text{closed}} + (L_{\text{open}} - L_{\text{closed}}) \times \frac{t_{\text{close}} - t}{\Delta t_{\text{pre\_close}}}$$
+
+Where:
+* $L_{\text{open}} = 20.00\text{x}$
+* $L_{\text{closed}} = 5.00\text{x}$
+* $\Delta t_{\text{pre\_close}} = 3,600\text{ s}$
+
+---
+
+## 2. Automated Keeper Deleveraging
+
+In the final 10 minutes before market close ($T - 10\text{m}$ to $T$), keeper bots can invoke `deleverage()` on any position exceeding the upcoming 5.00x weekend limit:
+
+```solidity
+function deleverage(address trader) external onlyRole(KEEPER_ROLE);
+```
+
+### Deleveraging Mechanics:
+1. **Executed at Fair Market Prices:** Positions are trimmed at the active Friday close price ($4,150.00) rather than at a panicked, discounted Monday open.
+2. **Trader Margin Preserved:** Traders receive the excess margin back into their account balance; they are not liquidated.
+3. **Vault Protected:** Because high-leverage risk is retired before market close, the liquidity vault carries zero 20x exposure across the weekend scoreboard blackout.

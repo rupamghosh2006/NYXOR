@@ -1,0 +1,42 @@
+---
+title: "Contract Deployments"
+description: "Comprehensive registry of smart contract addresses across Fuji C-Chain and Nyxor L1."
+---
+
+## Nyxor Sovereign L1 (Chain ID: 98421)
+
+All protocol smart contracts are live and funded on **Nyxor L1**:
+
+| Contract | Address | Function |
+|---|---|---|
+| **`DemoUSDC`** | `0x802508DB190b1826c6fC4238B5172F344ba96811` | Institutional test margin currency (`USDx`) |
+| **`MarketClock`** | `0x0269Fa1782f5Ed743486091900aa24eF1C8dCadA` | Effective time engine (`demoMode == true`) |
+| **`MarketSchedule`** | `0x3f5560b462Dc91339FAAeaCde7A0E98D26a20aAb` | Weekly schedule & holiday calendar |
+| **`MockPriceFeedStandard`** | `0x7F7b80959F30A06D3f066b8b63B065B02aD1A4D7` | Unmanaged oracle price feed |
+| **`MockPriceFeedGuarded`** | `0x66ac4aB263B69BE7003089BE185A202a9E981fCa` | Pre-close check-pointing price feed |
+| **`FlatRiskPolicy`** | `0x4341D3A566AC6e0e51076B9fEf68EFE3ca5E047F` | Static 20x unmanaged risk policy |
+| **`MarketHoursRiskPolicy`** | `0x820BE01587cfd1F9c6d46cB363f09D5c9Dcae974` | Dynamic linear pre-close ramp policy |
+| **`LiquidityVaultStandard`** | `0x4c38297282959b86482b10d59210c3f2df84B659` | Naive LP vault (seeded with 500k USDx) |
+| **`LiquidityVaultGuarded`** | `0x648b16f94C1ff3776368d8Bc067b5F8881ce6Cfd` | Guarded LP vault (seeded with 500k USDx) |
+| **`PerpMarketStandard`** | `0x2268c8cB67e1cd78Ca4Ab254894BB5F5D1E23Fab` | Standard perpetual futures market |
+| **`PerpMarketGuarded`** | `0x400D575b8BE7a395fBF4BC8161A4A454605730C7` | Guarded perpetual futures market |
+| **`TxAllowList`** | `0x0200000000000000000000000000000000000002` | Stateful precompile for consensus gating |
+| **`TeleporterMessenger`** | `0x253b2784c75e610dD0FF1da844684a1aC0aa5fcf` | Deterministic cross-chain messaging |
+
+---
+
+## Avalanche Fuji C-Chain (Chain ID: 43113)
+
+The benchmark deployment contracts on Fuji C-Chain:
+
+| Contract | Address | Explorer Link |
+|---|---|---|
+| **`LiquidityVaultStandard`** | `0xDD38265C1d66dCF067a24B1740895fDF5EA34f19` | [View on Snowscan](https://testnet.snowscan.xyz/address/0xDD38265C1d66dCF067a24B1740895fDF5EA34f19) |
+| **`LiquidityVaultGuarded`** | `0x5883F591C2eD45DC82FF9a551B4A00939eb84e2B` | [View on Snowscan](https://testnet.snowscan.xyz/address/0x5883F591C2eD45DC82FF9a551B4A00939eb84e2B) |
+| **`PerpMarketStandard`** | `0xf8FEd93D1C351543195fB0D069ed31478Fc3C562` | [View on Snowscan](https://testnet.snowscan.xyz/address/0xf8FEd93D1C351543195fB0D069ed31478Fc3C562) |
+| **`PerpMarketGuarded`** | `0x5db927AB629d0304C312e65F3a66D88938012E52` | [View on Snowscan](https://testnet.snowscan.xyz/address/0x5db927AB629d0304C312e65F3a66D88938012E52) |
+| **`MarketClock`** | `0x5e050a5b66E128ceF2bD9bd0cc4f2b400136fc13` | [View on Snowscan](https://testnet.snowscan.xyz/address/0x5e050a5b66E128ceF2bD9bd0cc4f2b400136fc13) |
+| **`MarketSchedule`** | `0x57231418E1F58059Ef53aC8E364499264BA69aBF` | [View on Snowscan](https://testnet.snowscan.xyz/address/0x57231418E1F58059Ef53aC8E364499264BA69aBF) |
+| **`MockPriceFeedGuarded`** | `0x983Da40dB7B35A0Cac08f8De5fcf629520322C44` | [View on Snowscan](https://testnet.snowscan.xyz/address/0x983Da40dB7B35A0Cac08f8De5fcf629520322C44) |
+| **`MockPriceFeedStandard`** | `0x68Edd9Ae0DD51a56027Db8A67d3726a827D21634` | [View on Snowscan](https://testnet.snowscan.xyz/address/0x68Edd9Ae0DD51a56027Db8A67d3726a827D21634) |
+| **`DemoUSDC`** | `0x03933052aC03983e37a1C3E0c1cE9DD78787E4f2` | [View on Snowscan](https://testnet.snowscan.xyz/address/0x03933052aC03983e37a1C3E0c1cE9DD78787E4f2) |

@@ -1,0 +1,59 @@
+---
+title: "Quickstart"
+description: "Connect to Nyxor Protocol and trade on sovereign Avalanche infrastructure in under 2 minutes."
+---
+
+## 1. Network Endpoints
+
+Nyxor operates across two distinct Avalanche venues:
+
+| Parameter | Nyxor Sovereign L1 | Avalanche Fuji C-Chain |
+|---|---|---|
+| **Role** | Execution & Compliance Layer | Benchmark & Liquidity Anchor |
+| **EVM Chain ID** | `98421` | `43113` |
+| **Native Gas Currency** | `NYX` | `AVAX` |
+| **RPC Endpoint** | `https://nodes-prod.43.207.73.245.sslip.io/ext/bc/2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS/rpc` | `https://api.avax-test.network/ext/bc/C/rpc` |
+| **Block Explorer** | [Glacier Explorer](https://build.avax.network/explorer/mainnet/2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS) | [Snowscan](https://testnet.snowscan.xyz) |
+
+---
+
+## 2. Add Nyxor L1 to Your Web3 Wallet
+
+You can add Nyxor L1 to Core Wallet, MetaMask, or Rabby with the following RPC details:
+
+```json
+{
+  "chainId": "0x18075",
+  "chainName": "Nyxor L1",
+  "rpcUrls": [
+    "https://nodes-prod.43.207.73.245.sslip.io/ext/bc/2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS/rpc"
+  ],
+  "nativeCurrency": {
+    "name": "NYX",
+    "symbol": "NYX",
+    "decimals": 18
+  },
+  "blockExplorerUrls": [
+    "https://build.avax.network/explorer/mainnet/2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS"
+  ]
+}
+```
+
+---
+
+## 3. Core Protocol Workflows
+
+<Steps>
+  <Step title="Claim Test Margin Collateral">
+    Navigate to the [Trade Terminal](https://nyxor-protocol.vercel.app/trade) and click **Claim USDx** to receive test margin tokens.
+  </Step>
+  <Step title="Open Isolated Margin Positions">
+    Choose between the **Guarded Market (Nyxor)** and **Standard Market (Naive 24/7)** to experience dynamic leverage adjustments in real time.
+  </Step>
+  <Step title="Teleport Collateral Across Chains">
+    Visit the [Bridge Portal](https://nyxor-protocol.vercel.app/bridge) to move margin collateral between Fuji C-Chain and Nyxor L1 via Avalanche Teleporter.
+  </Step>
+  <Step title="Verify Consensus Precompiles">
+    Use the [Compliance Portal](https://nyxor-protocol.vercel.app/compliance) to inspect wallet allowlist roles enforced at the node mempool boundary.
+  </Step>
+</Steps>

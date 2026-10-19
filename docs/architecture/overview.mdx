@@ -1,0 +1,63 @@
+---
+title: "System Overview"
+description: "Architectural blueprint of Nyxor Protocol smart contracts and system components."
+---
+
+## Smart Contract Topology
+
+Nyxor separates market operations into five modular contract layers:
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                              CLIENT TIERS                              │
+│         Institutional Web Terminal  ·  Keeper Bots  ·  Oracles         │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+┌───────────────────────────────────▼────────────────────────────────────┐
+│                       TIME & SCHEDULE ENGINE                           │
+│     MarketClock (UTC Time Engine)  ──►  MarketSchedule (Session Table) │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+┌───────────────────────────────────▼────────────────────────────────────┐
+│                           ORACLE FEEDS                                 │
+│          MockPriceFeedStandard    ·    MockPriceFeedGuarded            │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+┌───────────────────────────────────▼────────────────────────────────────┐
+│                        DYNAMIC RISK POLICIES                           │
+│   FlatRiskPolicy (Naive 20x)   ·   MarketHoursRiskPolicy (Guarded)     │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+┌───────────────────────────────────▼────────────────────────────────────┐
+│                     EXECUTION & LIQUIDITY VAULTS                       │
+│      PerpMarketStandard   ◄─────────►   LiquidityVaultStandard         │
+│      PerpMarketGuarded    ◄─────────►   LiquidityVaultGuarded          │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Component Roles
+
+### 1. MarketSchedule (`MarketSchedule.sol`)
+* Encodes real-world equity market trading hours (default 14:30–21:00 UTC Mon–Fri).
+* Manages `PRE_CLOSE` warning windows (1 hour prior to close) and `REOPEN_COOLDOWN` (15 minutes post-open).
+* Enforces full weekend closures (Saturday and Sunday).
+
+### 2. MarketClock (`MarketClock.sol`)
+* Returns `effectiveNow()`. In production, this proxies `block.timestamp`.
+* In `demoMode == true`, allows governance/keeper addresses to warp timestamps across phase boundaries to demonstrate market transitions deterministically.
+
+### 3. MarketHoursRiskPolicy (`MarketHoursRiskPolicy.sol`)
+* Dynamically evaluates maximum allowable leverage based on `MarketSchedule.phaseAt(timestamp)`.
+* Tightens leverage linearly from 20x down to 5x during `PRE_CLOSE`.
+* Restricts trading to `reduce-only` during `CLOSED`.
+
+### 4. PerpMarket (`PerpMarket.sol`)
+* Manages isolated-margin perpetual positions, opening/closing trades, and liquidations.
+* Queries the risk policy before order execution: transactions exceeding the active leverage or open interest caps revert.
+
+### 5. LiquidityVault (`LiquidityVault.sol`)
+* Pools institutional margin collateral (`USDx`).
+* Underwrites trader profits and absorbs liquidations.
+* Features isolated accounting between the Standard (Naive) and Guarded vaults to demonstrate solvency differentials.

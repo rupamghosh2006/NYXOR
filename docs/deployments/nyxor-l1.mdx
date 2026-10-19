@@ -1,0 +1,40 @@
+---
+title: "Nyxor L1 Network Specs"
+description: "Sovereign Subnet-EVM Layer 1 parameters, validator setup, and ACP-77 conversion proofs."
+---
+
+## Network Architecture & Identifiers
+
+Nyxor operates its own sovereign Subnet-EVM Layer 1 blockchain on the Avalanche ecosystem:
+
+| Identifier | Value | Notes |
+|---|---|---|
+| **Network Name** | `Nyxor L1` | Official L1 designation |
+| **EVM Chain ID** | `98421` | Custom Subnet-EVM chain identifier |
+| **Native Gas Currency** | `NYX` | 18 decimals, custom gas schedule |
+| **Subnet ID** | `2rXbQTjPnXKnRpogaLshYEmYfnLFahCgJ5gfuJ4dciHvJb6A9j` | Fuji P-Chain Subnet |
+| **Blockchain ID** | `2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS` | Fuji P-Chain Blockchain |
+| **VM ID** | `srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy` | Subnet-EVM v0.7.3 |
+| **RPC Endpoint** | `https://nodes-prod.43.207.73.245.sslip.io/ext/bc/2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS/rpc` | Hosted HTTPS RPC |
+| **Glacier Explorer** | [Avalanche Builder Hub Glacier Explorer](https://build.avax.network/explorer/mainnet/2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS) | Live Explorer |
+| **Firn Explorer** | [https://2rbfkegm.firn.gg](https://2rbfkegm.firn.gg) | Real-time block explorer |
+
+---
+
+## ACP-77 / ACP-99 Validator Consensus
+
+Nyxor L1 operates under Proof of Authority (PoA) consensus converted to an ACP-77 sovereign L1 on Fuji:
+
+* **Validator Node ID:** `NodeID-EKvv1jhJTCzBmKjm8P3jRvQ1cB3sTKDg2`
+* **BLS Public Key:** `0xb4c868c46b46e0fdd2c6566c27e8dc619841ccbe068b3e2154c7d29efe79495cad3234d3cb74c1b700cc53bde09155a2`
+* **Validation ID (ACP-77):** `6GXB4EYaJk7akgrkKvaiTUQyk6zCXF2vNgHGyHPxcLR5e85ur`
+* **Consensus Staked Balance:** `0.1 AVAX` (`100,000,000 nAVAX`)
+* **Validator Weight:** `100`
+
+---
+
+## On-Chain P-Chain Lifecycle Transactions
+
+1. **Subnet Creation:** [`2rXbQTjPnXKnRpogaLshYEmYfnLFahCgJ5gfuJ4dciHvJb6A9j`](https://build.avax.network/explorer/fuji/p-chain/tx/2rXbQTjPnXKnRpogaLshYEmYfnLFahCgJ5gfuJ4dciHvJb6A9j)
+2. **Blockchain Creation:** [`2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS`](https://build.avax.network/explorer/fuji/p-chain/tx/2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS)
+3. **Subnet-to-L1 Conversion:** [`bdyG8ymzvi2RpiHcJiQvD1ugKSht8VrFXVPjLZzvNxAp3cHhx`](https://build.avax.network/explorer/fuji/p-chain/tx/bdyG8ymzvi2RpiHcJiQvD1ugKSht8VrFXVPjLZzvNxAp3cHhx)
