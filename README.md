@@ -68,15 +68,12 @@ Trading a stock perp over the weekend is like betting on a game while the stadiu
 
 Nyxor eliminates gap-induced insolvencies by dynamically transitioning between four distinct operating phases:
 
-```
- Monday 14:30 UTC              Friday 20:00 UTC     Friday 21:00 UTC           Monday 14:30 UTC     Monday 14:45 UTC
-      ┌──────────────────────────────┬──────────────────┬─────────────────────────────┬────────────────────┬───────────►
-      │            OPEN              │    PRE_CLOSE     │           CLOSED            │  REOPEN_COOLDOWN   │   OPEN
-      │      Normal 24/7 (20x)       │  Linear 20x → 5x │    5x Cap, Reduce-Only      │  Liquidations On   │  Ramp to 20x
-      └──────────────────────────────┴──────────────────┴─────────────────────────────┴────────────────────┴───────────►
-                                     ▲                  ▲                             ▲
-                             Ramp Starts        Keeper Deleveraging            Official Open Gap
-                                                (Final 10 min window)          Settled Against Vault
+```mermaid
+flowchart LR
+    A["OPEN (Normal 24/7 Session: 20x Leverage)"] -->|"Friday 20:00 UTC: Ramp Starts"| B["PRE_CLOSE (Linear Deleveraging: 20x to 5x)"]
+    B -->|"Friday 21:00 UTC: Keeper Cuts at Fair Close"| C["CLOSED (Weekend Mode: 5x Cap, Reduce-Only)"]
+    C -->|"Monday 14:30 UTC: Official Gap Open"| D["REOPEN_COOLDOWN (15-Min Settlement Window)"]
+    D -->|"Monday 14:45 UTC: Settlement Complete"| A
 ```
 
 1. **Pre-Close Linear Ramp (`PRE_CLOSE`):** Leverage caps linearly tighten from 20x down to 5x over the final 60 minutes before close. Open interest caps contract from 100% to 40%.
@@ -88,22 +85,35 @@ Nyxor eliminates gap-induced insolvencies by dynamically transitioning between f
 
 ## 4. Architecture
 
-```
-                       Nyxor Protocol Architecture (Avalanche Fuji C-Chain)
-   ┌────────────────────────────────────────────────────────────────────────────────────────┐
-   │                                                                                        │
-   │    MarketClock ─────────────────► MarketSchedule (UTC Weekly Sessions & Holidays)      │
-   │         │                                      │                                       │
-   │         ▼                                      ▼                                       │
-   │    MockPriceFeed ──────────────────────► IRiskPolicy                                   │
-   │    (8-decimal Oracle)                      ├── FlatRiskPolicy (Naive 20x Baseline)     │
-   │                                            └── MarketHoursRiskPolicy (Guarded Engine)  │
-   │                                                           │                            │
-   │                                                           ▼                            │
-   │    LiquidityVault ◄──────────────────────────────► PerpMarket                          │
-   │    (LP Assets + Segregated Insurance Fund)         (Isolated Margin, Phase-Aware)      │
-   │                                                                                        │
-   └────────────────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph TimeAndOracle["Time & Oracle Subsystem"]
+        MC["MarketClock (Timestamp Management & Simulation)"]
+        MS["MarketSchedule (UTC Weekly Sessions & Holidays)"]
+        PF["MockPriceFeed (8-Decimal Oracle & Close Price Checkpoint)"]
+    end
+
+    subgraph RiskPolicies["Risk Parameter Engine"]
+        RP["IRiskPolicy (Risk Rules Interface)"]
+        FRP["FlatRiskPolicy (Naive 20x Static Baseline)"]
+        MHRP["MarketHoursRiskPolicy (Dynamic Guarded Engine)"]
+    end
+
+    subgraph CoreExecution["Core Settlement & Execution"]
+        PM["PerpMarket (Isolated Margin, Phase-Aware)"]
+        LV["LiquidityVault (LP Assets + Segregated Insurance Fund)"]
+    end
+
+    MC -->|"Time Sync"| MS
+    MC -->|"Price Timestamp"| PF
+    MS -->|"Current Session Phase"| RP
+    PF -->|"Spot & Close Checkpoints"| RP
+
+    RP -.->|"Baseline Policy"| FRP
+    RP -.->|"Guarded Policy"| MHRP
+
+    MHRP -->|"Dynamic Margin & Leverage Caps"| PM
+    PM <-->|"Collateral & Shortfall Settlement"| LV
 ```
 
 ---
