@@ -4,7 +4,7 @@
 > An open-source, market-hours-aware **risk layer** for Real-World Asset (RWA) perpetual futures on Avalanche.
 >
 > 🌐 **Live Demo Application:** [https://nyxor-protocol.vercel.app](https://nyxor-protocol.vercel.app)  
-> ⚡ **Sovereign Nyxor L1 Explorer:** [Avalanche Builder Hub Glacier Explorer](https://build.avax.network/explorer/mainnet/2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS)
+> ⚡ **Sovereign Nyxor L1 Explorer:** [Avalanche Builder Hub Glacier Explorer](https://build.avax.network/explorer/mainnet/2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS/block/1)
 
 ---
 
