@@ -24,7 +24,7 @@
 
 > **Live Demo Application:** [https://nyxor-protocol.vercel.app](https://nyxor-protocol.vercel.app)  
 > **Official Documentation:** [https://ruponchain.mintlify.site](https://ruponchain.mintlify.site)  
-> **Sovereign Nyxor L1 Explorer:** [Avalanche Builder Hub Glacier Explorer](https://build.avax.network/explorer/mainnet/2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS/block/1)  
+> **Sovereign Nyxor L1:** [L1 Creation Transaction](https://build.avax.network/explorer/mainnet/2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS/block/1)  
 > **Official X / Twitter:** [https://x.com/nyxorprotocol](https://x.com/nyxorprotocol)
 
 ---

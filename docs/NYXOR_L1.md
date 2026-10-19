@@ -29,7 +29,7 @@ Nyxor L1 is a sovereign, permissioned **Subnet-EVM Layer 1 blockchain** deployed
 | **VM ID** | `srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy` | Subnet-EVM Virtual Machine ID |
 | **RPC URL** | `https://nodes-prod.43.207.73.245.sslip.io/ext/bc/2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS/rpc` | Hosted HTTPS RPC endpoint |
 | **Live Web Terminal** | [https://nyxor-protocol.vercel.app](https://nyxor-protocol.vercel.app) | Live production web application |
-| **Glacier Explorer** | [Avalanche Glacier Explorer](https://build.avax.network/explorer/mainnet/2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS/block/1) | Builder Hub custom chain explorer |
+| **L1 Creation Transaction** | [L1 Creation Transaction](https://build.avax.network/explorer/mainnet/2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS/block/1) | Builder Hub Block 1 Receipt |
 | **Block Explorer** | [Firn Explorer](https://2rbfkegm.firn.gg) | Real-time block explorer |
 
 ---
