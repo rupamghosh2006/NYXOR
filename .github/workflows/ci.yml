@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  contracts:
+    name: Smart Contracts (Foundry)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: contracts
+    env:
+      FUJI_RPC_URL: "https://api.avax-test.network/ext/bc/C/rpc"
+      L1_RPC_URL: "https://nodes-prod.43.207.73.245.sslip.io/ext/bc/2rbFkegM5CZH4zSCXmSF5kLe9JEWwDbLipkU1Sfb1gy1ZFLjUS/rpc"
+      SNOWTRACE_API_KEY: "test"
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Show Foundry Version
+        run: forge --version
+
+      - name: Run Foundry Test Suite (103 Tests)
+        run: forge test --ffi -vvv
+
+  web:
+    name: Web Application (Next.js)
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_DEMO_MODE: "true"
+      NEXT_PUBLIC_FUJI_CHAIN_ID: "43113"
+      NEXT_PUBLIC_L1_CHAIN_ID: "98421"
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Web Application
+        run: pnpm --filter nyxor-web build
